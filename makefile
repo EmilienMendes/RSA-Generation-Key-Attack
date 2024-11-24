@@ -1,13 +1,12 @@
-# .PHONY: all compilation  
+.PHONY: generation_premier  
 
-all : crible_simple
+all : generation_premier
 
 compilation :
 	$(MAKE) -C generation_premier compilation
 
-crible_simple : 
-	$(MAKE) -C generation_premier crible_simple
-
+generation_premier : 
+	$(MAKE) -C generation_premier all
 
 clean :
 	$(MAKE) -C generation_premier clean

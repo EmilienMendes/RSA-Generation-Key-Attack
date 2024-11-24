@@ -1,4 +1,4 @@
-all : crible_optimise
+all : crible_simple crible_optimise
 
 k := 512
 N := 100
