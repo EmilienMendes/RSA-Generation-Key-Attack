@@ -3,10 +3,10 @@
 all : generation_premier
 
 compilation :
-	$(MAKE) -C generation_premier compilation
+	$(MAKE) -C spa-crible-simple compilation
 
 generation_premier : 
-	$(MAKE) -C generation_premier all
+	$(MAKE) -C spa-crible-simple all
 
 clean :
-	$(MAKE) -C generation_premier clean
+	$(MAKE) -C spa-crible-simple clean
