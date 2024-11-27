@@ -39,9 +39,8 @@ void generation_entier_crible_simple(unsigned int k, unsigned int N, unsigned in
                 fprintf(file, "%d\n", LIGNE3);
                 if (divisible != 0)
                 {
-                    // gmp_printf("%Zd -> j : %d divisible par %Zd\n", v, cpt, r[i]);
+                    // gmp_printf("j : %d divisible par %Zd\n",cpt, r[i]);
                     fprintf(file, "%d\n", LIGNE4);
-
                     mpz_add_ui(v, v, 2);
                     break;
                 }
@@ -64,22 +63,22 @@ void generation_entier_crible_simple(unsigned int k, unsigned int N, unsigned in
                 else
                 {
                     fprintf(file, "%d\n", LIGNE7);
-
                     mpz_add_ui(v, v, 2);
                 }
             }
         }
     }
     mpz_set(p, v);
+    
     mpz_clear(v);
     fprintf(file, "%d\n", LIGNE1);
-
     fclose(file);
 }
 
 /*
 @TODO
 Ajouter des conditions pour l'utilisation du programme argc,argv
+Mettre graine dynamique pour le programme final
 */
 int main(int argc, char **argv)
 {
@@ -89,7 +88,7 @@ int main(int argc, char **argv)
     int t = atoi(argv[3]);
     char *trace1 = argv[4];
     // char *trace2 = argv[5];
-
+    unsigned int seed = 65;// time(NULL)
     // Initialisation des valeurs pour le crible
     mpz_t p;
     mpz_init(p);
@@ -99,11 +98,11 @@ int main(int argc, char **argv)
     // Generateur pseudo aleatoires
     gmp_randstate_t generator;
     gmp_randinit_default(generator);
-    gmp_randseed_ui(generator, time(NULL));
+    gmp_randseed_ui(generator,seed);
 
     generation_entier_crible_simple(k, N, t, p, r, generator, trace1);
 
-    // gmp_printf("Generation d'un nombre premier de (crible simple) %d bits : %Zd\n", k, p);
+    gmp_printf("Generation d'un nombre premier de (crible simple) %d bits : %Zd\n", k, p);
 
     // Verification du nombre premier genere au cas ou (optionnel)
     // printf("Taille de p : %ld\np premier : %d\n",mpz_sizeinbase(p,2),mpz_probab_prime_p(p,10));

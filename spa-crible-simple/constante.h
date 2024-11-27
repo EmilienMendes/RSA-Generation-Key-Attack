@@ -1,11 +1,20 @@
 #define TRUE 1
 #define FALSE 0
 
-typedef enum { LIGNE1=5, LIGNE2=15, LIGNE3=20, LIGNE4=10, LIGNE5=7,LIGNE6=25,LIGNE7=10,LIGNE8=25 } VALEUR_COURANT ;
+typedef enum
+{
+   LIGNE1 = 5,
+   LIGNE2 = 15,
+   LIGNE3 = 20,
+   LIGNE4 = 10,
+   LIGNE5 = 7,
+   LIGNE6 = 25,
+   LIGNE7 = 10,
+   LIGNE8 = 25
+} VALEUR_COURANT;
 
 typedef struct
- {
-    short int j;
-    short int r;
- }Liste_Diviseur;
- 
+{
+   int j;
+   int r;
+} Liste_Diviseur;
