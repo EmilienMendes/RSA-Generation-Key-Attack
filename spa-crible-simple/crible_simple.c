@@ -12,7 +12,7 @@ void generation_entier_crible_simple(unsigned int k, unsigned int N, unsigned in
     mpz_t v;
     mpz_init(v);
 
-    unsigned int divisible, i;
+    unsigned int i, divisible;
 
     /*
     Creation d'un entier v d'exactement k bits
@@ -22,29 +22,47 @@ void generation_entier_crible_simple(unsigned int k, unsigned int N, unsigned in
     mpz_setbit(v, k - 1);
     mpz_setbit(v, 0);
     
-    unsigned int prime = mpz_probab_prime_p(v, t);
-    while (!prime)
+    while (TRUE)
     {
-        i = 0;
-        divisible = FALSE;
-
+        i = 1;
+        printf("5\n");
         // Verification de la non divisiblite du nombre par les N petits premiers
-        while (i++ < N && !divisible)
-            divisible = (mpz_divisible_p(v, r[i]) != 0);
-
+        while (i < N)
+        {
+            printf("15\n");
+            divisible = mpz_divisible_p(v, r[i]);
+            printf("20\n");
+            if (divisible != 0)
+            {
+                printf("10\n");
+                mpz_add_ui(v, v, 2);
+                break;
+            }
+            printf("7\n");
+            i++;
+        }
         /*
         Vérification si le nombre est divisible par l'un des k éléments.
         Si c'est le cas, passe à la condition suivante.
         Sinon, on vérifie si le nombre est premier, et on s'arrete si la condition est verifie
         Si le nombre n'est pas premier, on ajoute 2 et  on recommence.
         */
-        if (!divisible && mpz_probab_prime_p(v, t))
-            break;
-
-        mpz_add_ui(v, v, 2);
+        if (!divisible)
+        {
+            printf("25\n");
+            if (mpz_probab_prime_p(v, t))
+                break;
+            else
+            {
+                printf("10\n");
+                mpz_add_ui(v, v, 2);
+            }
+        }
     }
+
     mpz_set(p, v);
     mpz_clear(v);
+    printf("25\n");
 }
 
 /*
@@ -70,8 +88,8 @@ int main(int argc, char **argv)
 
     generation_entier_crible_simple(k, N, t, p, r, generator);
 
-    gmp_printf("Generation d'un nombre premier de (crible simple) %d bits : %Zd\n", k, p);
-    
+    // gmp_printf("Generation d'un nombre premier de (crible simple) %d bits : %Zd\n", k, p);
+
     // Verification du nombre premier genere au cas ou (optionnel)
     // printf("Taille de p : %ld\np premier : %d\n",mpz_sizeinbase(p,2),mpz_probab_prime_p(p,10));
 
