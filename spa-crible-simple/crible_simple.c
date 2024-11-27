@@ -1,5 +1,5 @@
 #include "crible_simple.h"
-
+#include "constante.h"
 /*
 Parametres :
 N -> Nombre d'entiers dans le crible simple
@@ -7,8 +7,9 @@ k -> Taille en bit du nombre voulu
 t -> Nombre de tours de Miller-Rabin
 */
 
-void generation_entier_crible_simple(unsigned int k, unsigned int N, unsigned int t, mpz_t p, mpz_t *r, gmp_randstate_t generator)
+void generation_entier_crible_simple(unsigned int k, unsigned int N, unsigned int t, mpz_t p, mpz_t *r, gmp_randstate_t generator, char *fichier)
 {
+    FILE *file = fopen(fichier, "w");
     mpz_t v;
     mpz_init(v);
 
@@ -21,40 +22,47 @@ void generation_entier_crible_simple(unsigned int k, unsigned int N, unsigned in
     mpz_urandomb(v, generator, k);
     mpz_setbit(v, k - 1);
     mpz_setbit(v, 0);
-    
+    int cpt = 0;
     while (TRUE)
     {
         i = 1;
-        printf("5\n");
+        cpt++;
+        fprintf(file, "%d\n", LIGNE1);
         // Verification de la non divisiblite du nombre par les N petits premiers
         while (i < N)
         {
-            printf("15\n");
+            fprintf(file, "%d\n", LIGNE2);
+
             divisible = mpz_divisible_p(v, r[i]);
-            printf("20\n");
+            fprintf(file, "%d\n", LIGNE3);
             if (divisible != 0)
             {
-                printf("10\n");
+                // gmp_printf("j : %d divisible par %Zd\n", cpt, r[i]);
+                fprintf(file, "%d\n", LIGNE4);
+
                 mpz_add_ui(v, v, 2);
                 break;
             }
-            printf("7\n");
+            fprintf(file, "%d\n", LIGNE5);
+
             i++;
         }
         /*
-        Vérification si le nombre est divisible par l'un des k éléments.
-        Si c'est le cas, passe à la condition suivante.
-        Sinon, on vérifie si le nombre est premier, et on s'arrete si la condition est verifie
+        Verification si le nombre est divisible par l'un des k elements.
+        Si c'est le cas, passe a la condition suivante.
+        Sinon, on verifie si le nombre est premier, et on s'arrete si la condition est verifie
         Si le nombre n'est pas premier, on ajoute 2 et  on recommence.
         */
         if (!divisible)
         {
-            printf("25\n");
+            fprintf(file, "%d\n", LIGNE6);
+
             if (mpz_probab_prime_p(v, t))
                 break;
             else
             {
-                printf("10\n");
+                fprintf(file, "%d\n", LIGNE7);
+
                 mpz_add_ui(v, v, 2);
             }
         }
@@ -62,7 +70,9 @@ void generation_entier_crible_simple(unsigned int k, unsigned int N, unsigned in
 
     mpz_set(p, v);
     mpz_clear(v);
-    printf("25\n");
+    fprintf(file, "%d\n", LIGNE1);
+
+    fclose(file);
 }
 
 /*
@@ -75,6 +85,9 @@ int main(int argc, char **argv)
     int k = atoi(argv[1]);
     int N = atoi(argv[2]);
     int t = atoi(argv[3]);
+    char *trace1 = argv[4];
+    // char *trace2 = argv[5];
+
     // Initialisation des valeurs pour le crible
     mpz_t p;
     mpz_init(p);
@@ -86,7 +99,7 @@ int main(int argc, char **argv)
     gmp_randinit_default(generator);
     gmp_randseed_ui(generator, time(NULL));
 
-    generation_entier_crible_simple(k, N, t, p, r, generator);
+    generation_entier_crible_simple(k, N, t, p, r, generator, trace1);
 
     // gmp_printf("Generation d'un nombre premier de (crible simple) %d bits : %Zd\n", k, p);
 
