@@ -1,11 +1,11 @@
-.PHONY: generation_premier  
+.PHONY: acquisition  
 
-all : generation_premier
+all : acquisition
 
 compilation :
 	$(MAKE) -C spa-crible-simple compilation
 
-generation_premier : 
+acquisition : 
 	$(MAKE) -C spa-crible-simple all
 
 clean :

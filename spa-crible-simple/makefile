@@ -1,4 +1,4 @@
-all : crible_simple 
+all : generation_premier 
 
 k := 512
 N := 100
@@ -9,8 +9,8 @@ compilation : compilation_crible_simple
 compilation_crible_simple : crible_simple.c ../utility/utility.c
 	$(CC) -Wall -o crible_simple ../utility/utility.c crible_simple.c   -lgmp
 
-crible_simple : compilation_crible_simple
-	./crible_simple ${k} ${N} ${t}
+generation_premier : compilation_crible_simple
+	./crible_simple ${k} ${N} ${t} > trace
 
 	
 clean :
