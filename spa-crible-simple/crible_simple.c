@@ -23,51 +23,53 @@ void generation_entier_crible_simple(unsigned int k, unsigned int N, unsigned in
     mpz_setbit(v, k - 1);
     mpz_setbit(v, 0);
     int cpt = 0;
-    while (TRUE)
+    if (mpz_probab_prime_p(v, t) == 0)
     {
-        i = 1;
-        cpt++;
-        fprintf(file, "%d\n", LIGNE1);
-        // Verification de la non divisiblite du nombre par les N petits premiers
-        while (i < N)
+        while (TRUE)
         {
-            fprintf(file, "%d\n", LIGNE2);
-
-            divisible = mpz_divisible_p(v, r[i]);
-            fprintf(file, "%d\n", LIGNE3);
-            if (divisible != 0)
+            i = 1;
+            cpt++;
+            fprintf(file, "%d\n", LIGNE1);
+            // Verification de la non divisiblite du nombre par les N petits premiers
+            while (i < N)
             {
-                // gmp_printf("j : %d divisible par %Zd\n", cpt, r[i]);
-                fprintf(file, "%d\n", LIGNE4);
+                fprintf(file, "%d\n", LIGNE2);
 
-                mpz_add_ui(v, v, 2);
-                break;
+                divisible = mpz_divisible_p(v, r[i]);
+                fprintf(file, "%d\n", LIGNE3);
+                if (divisible != 0)
+                {
+                    // gmp_printf("%Zd -> j : %d divisible par %Zd\n", v, cpt, r[i]);
+                    fprintf(file, "%d\n", LIGNE4);
+
+                    mpz_add_ui(v, v, 2);
+                    break;
+                }
+                fprintf(file, "%d\n", LIGNE5);
+
+                i++;
             }
-            fprintf(file, "%d\n", LIGNE5);
-
-            i++;
-        }
-        /*
-        Verification si le nombre est divisible par l'un des k elements.
-        Si c'est le cas, passe a la condition suivante.
-        Sinon, on verifie si le nombre est premier, et on s'arrete si la condition est verifie
-        Si le nombre n'est pas premier, on ajoute 2 et  on recommence.
-        */
-        if (!divisible)
-        {
-            fprintf(file, "%d\n", LIGNE6);
-
-            if (mpz_probab_prime_p(v, t))
-                break;
-            else
+            /*
+            Verification si le nombre est divisible par l'un des k elements.
+            Si c'est le cas, passe a la condition suivante.
+            Sinon, on verifie si le nombre est premier, et on s'arrete si la condition est verifie
+            Si le nombre n'est pas premier, on ajoute 2 et  on recommence.
+            */
+            if (!divisible)
             {
-                fprintf(file, "%d\n", LIGNE7);
+                fprintf(file, "%d\n", LIGNE6);
 
-                mpz_add_ui(v, v, 2);
+                if (mpz_probab_prime_p(v, t))
+                    break;
+                else
+                {
+                    fprintf(file, "%d\n", LIGNE7);
+
+                    mpz_add_ui(v, v, 2);
+                }
             }
         }
     }
-
     mpz_set(p, v);
     mpz_clear(v);
     fprintf(file, "%d\n", LIGNE1);
