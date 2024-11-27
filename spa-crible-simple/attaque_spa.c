@@ -178,7 +178,7 @@ int main(int argc, char **argv)
     Liste_Diviseur *liste_sans_doublon = enlever_doublon(liste, taille_liste, &taille_liste_sans_doublon);
     // for (int i = 0; i < taille_liste_sans_doublon; i++)
     //     printf("j : %d r : %d\n", liste_sans_doublon[i].j, liste_sans_doublon[i].r);
-    printf("Nombre de j (sans doublon) trouve : %d\n",taille_liste_sans_doublon);
+    printf("Nombre de j (sans doublon) trouve : %d\n", taille_liste_sans_doublon);
     attaque_spa(liste_sans_doublon, taille_liste_sans_doublon, m);
     free(liste);
 }

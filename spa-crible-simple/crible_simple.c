@@ -69,7 +69,7 @@ void generation_entier_crible_simple(unsigned int k, unsigned int N, unsigned in
         }
     }
     mpz_set(p, v);
-    
+
     mpz_clear(v);
     fprintf(file, "%d\n", LIGNE1);
     fclose(file);
@@ -88,7 +88,7 @@ int main(int argc, char **argv)
     int t = atoi(argv[3]);
     char *trace1 = argv[4];
     // char *trace2 = argv[5];
-    unsigned int seed = 65;// time(NULL)
+    unsigned int seed = 65; // time(NULL)
     // Initialisation des valeurs pour le crible
     mpz_t p;
     mpz_init(p);
@@ -98,7 +98,7 @@ int main(int argc, char **argv)
     // Generateur pseudo aleatoires
     gmp_randstate_t generator;
     gmp_randinit_default(generator);
-    gmp_randseed_ui(generator,seed);
+    gmp_randseed_ui(generator, seed);
 
     generation_entier_crible_simple(k, N, t, p, r, generator, trace1);
 

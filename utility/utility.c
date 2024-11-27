@@ -1,6 +1,5 @@
 #include "utility.h"
 
-
 mpz_t *generation_liste_nombres_premiers(int N)
 {
     mpz_t *liste = (mpz_t *)malloc(N * sizeof(mpz_t));
@@ -17,7 +16,7 @@ mpz_t *generation_liste_nombres_premiers(int N)
 
 void free_liste(int taille, mpz_t *liste)
 {
-     for (int i = 0; i < taille; i++)
+    for (int i = 0; i < taille; i++)
         mpz_clear(liste[i]);
     free(liste);
 }
