@@ -120,12 +120,11 @@ Liste_Diviseur *enlever_doublon(Liste_Diviseur *liste, int taille_liste, int *ta
 }
 
 // Calcule sp et sq
-unsigned int calcul_produit(mpz_t s, Liste_Diviseur *liste, int taille_liste)
+void calcul_produit(mpz_t s, Liste_Diviseur *liste, int taille_liste)
 {
     mpz_init_set_ui(s, 1);
     for (int i = 0; i < taille_liste; i++)
         mpz_mul_ui(s, s, liste[i].r);
-    return mpz_sizeinbase(s, 2);
 }
 
 /*
@@ -162,6 +161,26 @@ void theoreme_reste_chinois(Liste_Diviseur *liste, int taille_liste, int m, mpz_
 }
 
 /*
+x=a1​+m1​⋅((a2​−a1​)⋅(m1−1​(modm2​)))(modm1​m2​)
+*/
+void theoreme_reste_chinois_simplifie(mpz_t x, mpz_t a1, mpz_t a2, mpz_t r1, mpz_t r2)
+{
+    mpz_t inverse, module_mult;
+    mpz_inits(inverse, module_mult, NULL);
+
+    mpz_invert(inverse, r1, r2); // inverse = r1 ^-1 mod r2
+    mpz_mul(module_mult, r1, r2);
+
+    mpz_sub(x, a2, a1);
+    mpz_mul(x, x, inverse);
+    mpz_mul(x, x, r1);
+    mpz_add(x, x, a1);
+    mpz_mod(x, x, module_mult);
+
+    mpz_clears(inverse, module_mult, NULL);
+}
+
+/*
 Verifie que x = premier mod s
 */
 int verification(mpz_t premier, mpz_t s, mpz_t x)
@@ -177,18 +196,12 @@ int verification(mpz_t premier, mpz_t s, mpz_t x)
 int attaque_spa(Liste_Diviseur *pliste, Liste_Diviseur *qliste, int ptaille_liste, int qtaille_liste, int m1, int m2, mpz_t n, mpz_t p, mpz_t q)
 {
     mpz_t sp, sq;
-    unsigned int nb_bits_sp, nb_bits_sq;
     /*
     Calcul de sp = produit des r pour la generation de p
     Calcul de sq = produit des r pour la generation de q
     */
-    nb_bits_sp = calcul_produit(sp, pliste, ptaille_liste);
-    nb_bits_sq = calcul_produit(sq, qliste, qtaille_liste);
-    if (nb_bits_sp < TRESHOLD_S && nb_bits_sq < TRESHOLD_S)
-    {
-        printf("Pas assez de bits exploitables pour l'attaque\n");
-        return 0;
-    }
+    calcul_produit(sp, pliste, ptaille_liste);
+    calcul_produit(sq, qliste, qtaille_liste);
 
     // gmp_printf("sp : %Zd\n", sp);
     // gmp_printf("sq : %Zd\n", sq);
@@ -197,8 +210,8 @@ int attaque_spa(Liste_Diviseur *pliste, Liste_Diviseur *qliste, int ptaille_list
     Recuperation des ap,bp,aq,bq avec le theoreme des restes chinois
     */
 
-    mpz_t ap, aq, bp, bq;
-    mpz_inits(ap, aq, bp, bq, NULL);
+    mpz_t ap, aq, bp, bq, cp, cq;
+    mpz_inits(ap, aq, bp, bq, cp, cq, NULL);
 
     theoreme_reste_chinois(pliste, ptaille_liste, m1, sp, ap);
     theoreme_reste_chinois(qliste, qtaille_liste, m2, sq, bq);
@@ -206,6 +219,7 @@ int attaque_spa(Liste_Diviseur *pliste, Liste_Diviseur *qliste, int ptaille_list
     /*
     On ajoute 2 a ap et bq car les valeurs finales seront celle qui
     ne se sont pas arretes
+    @TODO Etudier l'erreur qui arrive de temps en temps pour la valeur de ap
     */
     mpz_add_ui(ap, ap, 2);
     mpz_add_ui(bq, bq, 2);
@@ -227,16 +241,69 @@ int attaque_spa(Liste_Diviseur *pliste, Liste_Diviseur *qliste, int ptaille_list
     mpz_invert(aq, ap, sp);
     mpz_mul(aq, aq, n);
     mpz_mod(aq, aq, sp);
+
     // Calcul de bp
     mpz_invert(bp, bq, sq);
     mpz_mul(bp, bp, n);
     mpz_mod(bp, bp, sq);
-    gmp_printf("ap = %Zd  \n", ap);
-    gmp_printf("aq = %Zd  \n", aq);
-    gmp_printf("bp = %Zd  \n", bp);
-    gmp_printf("bq = %Zd  \n", bq);
 
-    mpz_clears(ap, aq, bp, bq, sp, sq, NULL);
+    gmp_printf("ap (%d bits) = %Zd  \n", mpz_sizeinbase(ap, 2), ap);
+    gmp_printf("aq (%d bits) = %Zd  \n", mpz_sizeinbase(aq, 2), aq);
+    gmp_printf("bp (%d bits) = %Zd  \n", mpz_sizeinbase(bp, 2), bp);
+    gmp_printf("bq (%d bits) = %Zd  \n", mpz_sizeinbase(bq, 2), bq);
+
+    /*
+    On va appliquer le theoreme des restes chinois sur (ap,bp) et (aq,bq)
+    Les modulos doivent etre premier entre eux
+    On cherche donc le pgcd et on fais
+    sp_bis = sp/pgcd(sp,sq)
+
+    */
+    mpz_t pgcd_s, sp_bis, sq_bis, s;
+    mpz_inits(pgcd_s, sp_bis, sq_bis, s, NULL);
+    mpz_gcd(pgcd_s, sp, sq);
+    mpz_lcm(s, sp, sq);
+
+    mpz_fdiv_q(sp_bis, sp, pgcd_s);
+    mpz_mod(ap, ap, sp_bis);
+    mpz_mod(aq, aq, sp_bis);
+
+    // Resultat cp et cq modulo s = lcm(sp,sq)
+    theoreme_reste_chinois_simplifie(cp, ap, bp, sp_bis, sq);
+    theoreme_reste_chinois_simplifie(cq, aq, bq, sp_bis, sq);
+
+    if (!verification(p, s, cp))
+    {
+        printf("Erreur dans la valeur de cp \n");
+        return 0;
+    }
+
+    if (!verification(q, s, cq))
+    {
+        printf("Erreur dans la valeur de cq \n");
+        return 0;
+    }
+
+    gmp_printf("cp = %Zd\n", cp);
+    gmp_printf("cq = %Zd\n", cq);
+
+    unsigned int nb_bits_cp = mpz_sizeinbase(cp, 2);
+    unsigned int nb_bits_cq = mpz_sizeinbase(cq, 2);
+
+    if (nb_bits_cp < TRESHOLD_S && nb_bits_cq < TRESHOLD_S)
+        printf("Pas assez de bits pour faire l'attaque cp : (%d bits reel < %d bits requis ) cq : (%d bits reel < %d bits requis ) \n", nb_bits_cp, TRESHOLD_S, nb_bits_cq, TRESHOLD_S);
+    else
+    {
+        printf("Attaque possible : \n");
+        if (nb_bits_cp > nb_bits_cq)
+            printf("Conseille avec cp : %d bits \n", nb_bits_cp);
+        else if( nb_bits_cp < nb_bits_cq)
+            printf("Conseille avec cq : %d bits \n", nb_bits_cq);
+        else
+            printf("Equivalence entre cp et cq en terme de taille\n");
+    }
+
+    mpz_clears(ap, aq, bp, bq, cp, cq, sp, sq, sp_bis, sq_bis, pgcd_s, s, NULL);
     return 1;
 }
 
