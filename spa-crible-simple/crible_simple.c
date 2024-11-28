@@ -49,7 +49,7 @@ void generation_entier_crible_simple(unsigned int k, unsigned int N, unsigned in
                 fprintf(file, "%d\n", LIGNE3);
                 if (divisible != 0)
                 {
-                    // gmp_printf("j : %d divisible par %Zd\n",cpt, r[i]);
+                    gmp_printf("j : %d divisible par %Zd\n",cpt, r[i]);
                     fprintf(file, "%d\n", LIGNE4);
                     mpz_add_ui(v, v, 2);
                     break;
@@ -109,8 +109,9 @@ int main(int argc, char **argv)
     gmp_randstate_t generator;
     gmp_randinit_default(generator);
     gmp_randseed_ui(generator, seed);
-
+    printf("p\n");
     generation_entier_crible_simple(k, N, t, p, r, generator, ptrace);
+    printf("q\n");
     generation_entier_crible_simple(k, N, t, q, r, generator, qtrace);
 
     mpz_mul(n,p,q);
