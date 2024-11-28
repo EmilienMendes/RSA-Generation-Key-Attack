@@ -1,4 +1,5 @@
 #include "../utility/utility.h"
+#include "constante.h"
 #include <stdio.h>
 #include <time.h>
 

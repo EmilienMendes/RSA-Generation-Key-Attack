@@ -1,5 +1,15 @@
 #include "crible_simple.h"
-#include "constante.h"
+
+void ecriture_parametres(mpz_t p,mpz_t q,mpz_t n,char *fichier){
+    FILE * file = fopen(fichier,"w");
+    gmp_fprintf(file,"n = %Zd\n",n);
+    gmp_fprintf(file,"p = %Zd\n",p);
+    gmp_fprintf(file,"q = %Zd\n",q);
+    fclose(file);
+}
+
+
+
 /*
 Parametres :
 N -> Nombre d'entiers dans le crible simple
@@ -78,7 +88,6 @@ void generation_entier_crible_simple(unsigned int k, unsigned int N, unsigned in
 /*
 @TODO
 Ajouter des conditions pour l'utilisation du programme argc,argv
-Mettre graine dynamique pour le programme final
 */
 int main(int argc, char **argv)
 {
@@ -86,12 +95,13 @@ int main(int argc, char **argv)
     int k = atoi(argv[1]);
     int N = atoi(argv[2]);
     int t = atoi(argv[3]);
-    char *trace1 = argv[4];
-    // char *trace2 = argv[5];
-    unsigned int seed = 65; // time(NULL)
+    char *ptrace = argv[4];
+    char *qtrace = argv[5];
+    char *parametres = argv[6];
+    unsigned int seed = time(NULL);
     // Initialisation des valeurs pour le crible
-    mpz_t p;
-    mpz_init(p);
+    mpz_t p,q,n;
+    mpz_inits(p,q,n,NULL);
 
     mpz_t *r;
     r = generation_liste_nombres_premiers(N);
@@ -100,13 +110,15 @@ int main(int argc, char **argv)
     gmp_randinit_default(generator);
     gmp_randseed_ui(generator, seed);
 
-    generation_entier_crible_simple(k, N, t, p, r, generator, trace1);
+    generation_entier_crible_simple(k, N, t, p, r, generator, ptrace);
+    generation_entier_crible_simple(k, N, t, q, r, generator, qtrace);
 
-    gmp_printf("Generation d'un nombre premier de (crible simple) %d bits : %Zd\n", k, p);
+    mpz_mul(n,p,q);
+    // if(mpz_probab_prime_p(p,10) && mpz_probab_prime_p(q,10) )
+    ecriture_parametres(p,q,n,parametres);
 
-    // Verification du nombre premier genere au cas ou (optionnel)
-    // printf("Taille de p : %ld\np premier : %d\n",mpz_sizeinbase(p,2),mpz_probab_prime_p(p,10));
 
-    mpz_clear(p);
+    gmp_randclear(generator);
+    mpz_clears(p,q,n,NULL);
     return 0;
 }

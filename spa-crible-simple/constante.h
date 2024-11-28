@@ -1,6 +1,7 @@
 #define TRUE 1
 #define FALSE 0
 
+#define TRESHOLD_S 100
 typedef enum
 {
    LIGNE1 = 5,

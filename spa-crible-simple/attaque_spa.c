@@ -1,5 +1,27 @@
 #include "attaque_spa.h"
 
+void afficher_liste(Liste_Diviseur *liste, unsigned int taille_liste)
+{
+    for (int i = 0; i < taille_liste; i++)
+        printf("j : %d r : %d\n", liste[i].j, liste[i].r);
+}
+
+void recuperer_parametres(char *fichier,mpz_t n,mpz_t p,mpz_t q){
+    FILE *file = fopen(fichier,"r");
+    gmp_fscanf(file,"n = %Zd\n",n);
+    gmp_fscanf(file,"p = %Zd\n",p);
+    gmp_fscanf(file,"q = %Zd\n",q);
+    fclose(file);
+    // printf("--------------------------\n");
+    // gmp_printf("n = %Zd\n",n);
+    // gmp_printf("p = %Zd\n",p);
+    // gmp_printf("q = %Zd\n",q);
+    // printf("--------------------------\n");
+
+
+}
+
+
 Liste_Diviseur *recuperer_diviseur(int N, char *fichier, int *taille_liste, int *m)
 {
     FILE *file = fopen(fichier, "r");
@@ -103,25 +125,16 @@ Liste_Diviseur *enlever_doublon(Liste_Diviseur *liste, int taille_liste, int *ta
     return liste_sans_doublon;
 }
 
-int attaque_spa(Liste_Diviseur *liste, int taille_liste, int m)
+// Calcule sp et sq
+unsigned int calcul_produit(mpz_t s, Liste_Diviseur *liste, int taille_liste)
 {
-    mpz_t sp;
-    mpz_init_set_ui(sp, 1);
+    mpz_init_set_ui(s, 1);
     for (int i = 0; i < taille_liste; i++)
-        mpz_mul_ui(sp, sp, liste[i].r);
+        mpz_mul_ui(s, s, liste[i].r);
+    return mpz_sizeinbase(s, 2);
+}
 
-    int nb_bits_sp = mpz_sizeinbase(sp, 2);
-    if (nb_bits_sp < 1)
-    {
-        printf("Attaque impossible sp est trop petit (%d bits) \n", nb_bits_sp);
-        return 0;
-    }
-    // gmp_printf("sp : %Zd\n", sp);
-
-    mpz_t ap, aq;
-    mpz_inits(ap, aq, NULL);
-
-    /*
+/*
     p = 2 * (m - j1) [r1]
     p = 2 * (m - j2) [r2]
             ...
@@ -132,7 +145,10 @@ int attaque_spa(Liste_Diviseur *liste, int taille_liste, int m)
     p = ap [sp] = 2 x (m - j1) x (sp/r1) x ((sp/r1) ^ -1 mod r1) + 2 x (m - j2) x .... x (2 * m - jn) x (sp/rn) x ((sp/rn) ^ -1 mod rn) [sp]
                 = a1 x M1 x y1 + ... + an x Mn x yn
     avec        ai = 2 x (m - ji)   Mi = sp / ri yi = (sp/ri) ^ -1 mod ri
-    */
+*/
+
+void theoreme_reste_chinois(Liste_Diviseur *liste, int taille_liste, int m, mpz_t s, mpz_t x)
+{
     unsigned int ai;
     mpz_t Mi, yi, ri;
     mpz_inits(Mi, yi, ri, NULL);
@@ -141,44 +157,106 @@ int attaque_spa(Liste_Diviseur *liste, int taille_liste, int m)
 
         ai = 2 * (m - liste[i].j);
         mpz_set_ui(ri, liste[i].r);
-        mpz_fdiv_q(Mi, sp, ri);
+        mpz_fdiv_q(Mi, s, ri);
         mpz_invert(yi, Mi, ri);
 
         mpz_mul(yi, yi, Mi);    // yi = yi x Mi
         mpz_mul_ui(yi, yi, ai); // yi = yi x Mi x ai
-        mpz_add(ap, ap, yi);    // ap += ai x yi x Mi
+        mpz_add(x, x, yi);      // ap += ai x yi x Mi
     }
+    mpz_clears(Mi, yi, ri, NULL);
+}
+
+int attaque_spa(Liste_Diviseur *pliste, Liste_Diviseur *qliste, int ptaille_liste, int qtaille_liste, int m, mpz_t n,mpz_t p,mpz_t q)
+{
+    mpz_t sp, sq;
+    unsigned int nb_bits_sp, nb_bits_sq;
+    nb_bits_sp = calcul_produit(sp, pliste, ptaille_liste);
+    nb_bits_sq = calcul_produit(sq, qliste, qtaille_liste);
+    if (nb_bits_sp < TRESHOLD_S && nb_bits_sq < TRESHOLD_S)
+    {
+        printf("Pas assez de bits exploitables pour l'attaque\n");
+        return 0;
+    }
+
+    // gmp_printf("sp : %Zd\n", sp);
+    // gmp_printf("sq : %Zd\n", sq);
+
+    mpz_t ap, aq, bp, bq;
+    mpz_inits(ap, aq, bp, bq, NULL);
+
+    theoreme_reste_chinois(pliste, ptaille_liste, m, sp, ap);
+    theoreme_reste_chinois(pliste, ptaille_liste, m, sq, bq);
+
     gmp_printf("ap (%d bits) = %Zd [sp]\n", mpz_sizeinbase(ap, 2), ap);
+    gmp_printf("bq (%d bits) = %Zd [sq]\n", mpz_sizeinbase(bq, 2), bq);
+
+    mpz_t reste;
+    mpz_init(reste);
+    mpz_mod(reste,p,sp);
+    gmp_printf("p = %Zd [sp]\n",reste);
+    mpz_clear(reste);
 
     if (mpz_invert(aq, ap, sp) == 0)
         printf("Pas d'inverse de ap mod sp\n");
     else
-        gmp_printf("[INCOMPLET] aq = %Zd [sp] \n", aq);
-    /*
-    mpz_mul(aq,aq,n);
-    mpz_mod(aq,aq,sp);
-    */
+    {
+        mpz_mul(aq, aq, n);
+        mpz_mod(aq, aq, sp);
+        gmp_printf("aq = %Zd [sp] \n", aq);
+    }
 
-    mpz_clears(ap, aq, sp, Mi, yi, NULL);
+    if (mpz_invert(bp, bq, sq) == 0)
+        printf("Pas d'inverse de bq mod sq\n");
+    else
+    {
+        mpz_mul(bp, bp, n);
+        mpz_mod(bp, bp, sq);
+        gmp_printf("bq = %Zd [sq] \n", aq);
+    }
+
+
+    mpz_clears(ap, aq, bp, bq, sp, sq, NULL);
     return 1;
 }
 
 int main(int argc, char **argv)
 {
     int N = atoi(argv[1]);
-    char *fichier = argv[2];
+    char *ptrace = argv[2];
+    char *qtrace = argv[3];
+    char *fichier_parametres = argv[4];
 
     int m = 0;
-    int taille_liste = 0;
-    Liste_Diviseur *liste = recuperer_diviseur(N, fichier, &taille_liste, &m);
-    //  for (int i = 0; i < taille_liste; i++)
-    //         printf("j : %d r : %d\n", liste[i].j, liste[i].r);
 
-    int taille_liste_sans_doublon = 0;
-    Liste_Diviseur *liste_sans_doublon = enlever_doublon(liste, taille_liste, &taille_liste_sans_doublon);
-    // for (int i = 0; i < taille_liste_sans_doublon; i++)
-    //     printf("j : %d r : %d\n", liste_sans_doublon[i].j, liste_sans_doublon[i].r);
-    printf("Nombre de j (sans doublon) trouve : %d\n", taille_liste_sans_doublon);
-    attaque_spa(liste_sans_doublon, taille_liste_sans_doublon, m);
-    free(liste);
+    mpz_t n, p, q;
+    mpz_inits(n, p, q,NULL);
+    recuperer_parametres(fichier_parametres, n, p, q);
+    
+    int ptaille_liste = 0;
+    int qtaille_liste = 0;
+
+    Liste_Diviseur *pliste = recuperer_diviseur(N, ptrace, &ptaille_liste, &m);
+    Liste_Diviseur *qliste = recuperer_diviseur(N, qtrace, &qtaille_liste, &m);
+
+    //afficher_liste(pliste,ptaille_liste);
+    // afficher_liste(qliste,qtaille_liste);
+    
+    int ptaille_liste_sans_doublon = 0;
+    int qtaille_liste_sans_doublon = 0;
+    
+    Liste_Diviseur *pliste_sans_doublon = enlever_doublon(pliste, ptaille_liste, &ptaille_liste_sans_doublon);
+    Liste_Diviseur *qliste_sans_doublon = enlever_doublon(qliste, qtaille_liste, &qtaille_liste_sans_doublon);
+    
+    // afficher_liste(pliste_sans_doublon, ptaille_liste_sans_doublon);
+    // afficher_liste(qliste_sans_doublon, qtaille_liste_sans_doublon);
+
+
+    attaque_spa(pliste_sans_doublon, qliste_sans_doublon, ptaille_liste_sans_doublon, qtaille_liste_sans_doublon, m, n,p,q);
+
+    mpz_clears(n, p, q, NULL);
+    free(pliste);
+    free(qliste);
+    free(pliste_sans_doublon);
+    free(qliste_sans_doublon);
 }
