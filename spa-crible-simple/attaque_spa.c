@@ -164,11 +164,12 @@ void theoreme_reste_chinois(Liste_Diviseur *liste, int taille_liste, int m, mpz_
 /*
 Verifie que x = premier mod s
 */
-int verification(mpz_t premier,mpz_t s,mpz_t x){
+int verification(mpz_t premier, mpz_t s, mpz_t x)
+{
     mpz_t tmp;
     mpz_init(tmp);
-    mpz_mod(tmp,premier,s);
-    unsigned int comparaison = (mpz_cmp(tmp,x) == 0);
+    mpz_mod(tmp, premier, s);
+    unsigned int comparaison = (mpz_cmp(tmp, x) == 0);
     mpz_clear(tmp);
     return comparaison;
 }
@@ -177,6 +178,10 @@ int attaque_spa(Liste_Diviseur *pliste, Liste_Diviseur *qliste, int ptaille_list
 {
     mpz_t sp, sq;
     unsigned int nb_bits_sp, nb_bits_sq;
+    /*
+    Calcul de sp = produit des r pour la generation de p
+    Calcul de sq = produit des r pour la generation de q
+    */
     nb_bits_sp = calcul_produit(sp, pliste, ptaille_liste);
     nb_bits_sq = calcul_produit(sq, qliste, qtaille_liste);
     if (nb_bits_sp < TRESHOLD_S && nb_bits_sq < TRESHOLD_S)
@@ -187,6 +192,10 @@ int attaque_spa(Liste_Diviseur *pliste, Liste_Diviseur *qliste, int ptaille_list
 
     // gmp_printf("sp : %Zd\n", sp);
     // gmp_printf("sq : %Zd\n", sq);
+
+    /*
+    Recuperation des ap,bp,aq,bq avec le theoreme des restes chinois
+    */
 
     mpz_t ap, aq, bp, bq;
     mpz_inits(ap, aq, bp, bq, NULL);
@@ -202,35 +211,29 @@ int attaque_spa(Liste_Diviseur *pliste, Liste_Diviseur *qliste, int ptaille_list
     mpz_add_ui(bq, bq, 2);
 
     /*
-    Verification avec les vrais valeurs de p et de q
+    Verification avec les vrais valeurs de p et de qcd
     */
-    if(!verification(p,sp,ap) ){
+    if (!verification(p, sp, ap))
+    {
         printf("Erreur dans la valeur de ap \n");
         return 0;
     }
-    if(!verification(q,sq,bq) ){
+    if (!verification(q, sq, bq))
+    {
         printf("Erreur dans la valeur de ap \n");
         return 0;
     }
-
+    // Calcul de aq
+    mpz_invert(aq, ap, sp);
+    mpz_mul(aq, aq, n);
+    mpz_mod(aq, aq, sp);
+    // Calcul de bp
+    mpz_invert(bp, bq, sq);
+    mpz_mul(bp, bp, n);
+    mpz_mod(bp, bp, sq);
     gmp_printf("ap = %Zd  \n", ap);
-
-    if (mpz_invert(aq, ap, sp) == 0)
-        printf("Pas d'inverse de ap mod sp\n");
-    else
-    {
-        mpz_mul(aq, aq, n);
-        mpz_mod(aq, aq, sp);
-        gmp_printf("aq = %Zd  \n", aq);
-    }
-    if (mpz_invert(bp, bq, sq) == 0)
-        printf("Pas d'inverse de bq mod sq\n");
-    else
-    {
-        mpz_mul(bp, bp, n);
-        mpz_mod(bp, bp, sq);
-        gmp_printf("bp = %Zd  \n", bp);
-    }
+    gmp_printf("aq = %Zd  \n", aq);
+    gmp_printf("bp = %Zd  \n", bp);
     gmp_printf("bq = %Zd  \n", bq);
 
     mpz_clears(ap, aq, bp, bq, sp, sq, NULL);
@@ -266,8 +269,8 @@ int main(int argc, char **argv)
     Liste_Diviseur *pliste_sans_doublon = enlever_doublon(pliste, ptaille_liste, &ptaille_liste_sans_doublon);
     Liste_Diviseur *qliste_sans_doublon = enlever_doublon(qliste, qtaille_liste, &qtaille_liste_sans_doublon);
 
-    //afficher_liste(pliste_sans_doublon, ptaille_liste_sans_doublon);
-    // afficher_liste(qliste_sans_doublon, qtaille_liste_sans_doublon);
+    // afficher_liste(pliste_sans_doublon, ptaille_liste_sans_doublon);
+    //  afficher_liste(qliste_sans_doublon, qtaille_liste_sans_doublon);
 
     attaque_spa(pliste_sans_doublon, qliste_sans_doublon, ptaille_liste_sans_doublon, qtaille_liste_sans_doublon, m1, m2, n, p, q);
 
