@@ -21,6 +21,9 @@ generation_premier : compilation_crible_simple
 attaque_spa : compilation_attaque_spa 
 	./attaque_spa ${N} ${ptrace} ${qtrace} ${parametres}
 
+lancement_attaque : 
+	./crible_simple ${k} ${N} ${t} ${ptrace} ${qtrace} ${parametres}
+	./attaque_spa ${N} ${ptrace} ${qtrace} ${parametres}
 
 clean :
 	rm -f crible_simple attaque_spa ${ptrace} ${qtrace} ${parametres}

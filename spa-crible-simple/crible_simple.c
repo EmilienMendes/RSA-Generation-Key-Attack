@@ -38,7 +38,6 @@ void generation_entier_crible_simple(unsigned int k, unsigned int N, unsigned in
         while (TRUE)
         {
             i = 1;
-            cpt++;
             fprintf(file, "%d\n", LIGNE1);
             // Verification de la non divisiblite du nombre par les N petits premiers
             while (i < N)
@@ -76,10 +75,10 @@ void generation_entier_crible_simple(unsigned int k, unsigned int N, unsigned in
                     mpz_add_ui(v, v, 2);
                 }
             }
+            cpt++;
         }
     }
     mpz_set(p, v);
-
     mpz_clear(v);
     fprintf(file, "%d\n", LIGNE1);
     fclose(file);

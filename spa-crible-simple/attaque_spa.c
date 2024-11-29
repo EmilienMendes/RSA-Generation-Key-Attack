@@ -47,18 +47,14 @@ Liste_Diviseur *recuperer_diviseur(int N, char *fichier, int *taille_liste, int 
     // On revient au debut du fichier pour recuper les diviseurs
     fseek(file, 0, SEEK_SET);
     unsigned int cpt = 0;
-    unsigned int j = 0;
+    // On commence avec j = -1
+    unsigned int j = -1;
 
     while (fgets(buffer, BUFF_SIZE, file) != NULL)
     {
         valeur_courant_precedent = valeur_courant_actuel;
         valeur_courant_actuel = atoi(buffer);
-        // Ligne 1 => j = 2 donc on vj est incremente
-        if (valeur_courant_actuel == LIGNE1)
-        {
-            r = 1;
-            j++;
-        }
+
         // Ligne 7 => On passe au prochain pj
         if (valeur_courant_actuel == LIGNE5)
             r++;
@@ -69,6 +65,13 @@ Liste_Diviseur *recuperer_diviseur(int N, char *fichier, int *taille_liste, int 
             liste[cpt].r = mpz_get_ui(liste_premiers[r]);
             liste[cpt].j = j;
             cpt++;
+        }
+
+        // Ligne 1 => j = 2 donc on vj est incremente
+        if (valeur_courant_actuel == LIGNE1)
+        {
+            r = 1;
+            j++;
         }
     }
 
@@ -145,6 +148,7 @@ void theoreme_reste_chinois(Liste_Diviseur *liste, int taille_liste, int m, mpz_
     unsigned int ai;
     mpz_t Mi, yi, ri;
     mpz_inits(Mi, yi, ri, NULL);
+    // m++; // Fonctionne mais je ne sais pas pourquoi
     for (int i = 0; i < taille_liste; i++)
     {
         ai = (2 * (m - liste[i].j)) % liste[i].r;
@@ -217,26 +221,14 @@ int attaque_spa(Liste_Diviseur *pliste, Liste_Diviseur *qliste, int ptaille_list
     theoreme_reste_chinois(qliste, qtaille_liste, m2, sq, bq);
 
     /*
-    On ajoute 2 a ap et bq car les valeurs finales seront celle qui
-    ne se sont pas arretes
-    @TODO Etudier l'erreur qui arrive de temps en temps pour la valeur de ap
+    Verification avec les vrais valeurs de p et de q
     */
-    mpz_add_ui(ap, ap, 2);
-    mpz_add_ui(bq, bq, 2);
+    if (!verification(p, sp, ap) || !verification(q, sq, bq))
+    {
+        printf("Erreur dans la valeur de ap ou bq \n");
+        return 0;
+    }
 
-    /*
-    Verification avec les vrais valeurs de p et de qcd
-    */
-    if (!verification(p, sp, ap))
-    {
-        printf("Erreur dans la valeur de ap \n");
-        return 0;
-    }
-    if (!verification(q, sq, bq))
-    {
-        printf("Erreur dans la valeur de ap \n");
-        return 0;
-    }
     // Calcul de aq
     mpz_invert(aq, ap, sp);
     mpz_mul(aq, aq, n);
@@ -272,15 +264,9 @@ int attaque_spa(Liste_Diviseur *pliste, Liste_Diviseur *qliste, int ptaille_list
     theoreme_reste_chinois_simplifie(cp, ap, bp, sp_bis, sq);
     theoreme_reste_chinois_simplifie(cq, aq, bq, sp_bis, sq);
 
-    if (!verification(p, s, cp))
+    if (!verification(p, s, cp) || !verification(q, s, cq))
     {
-        printf("Erreur dans la valeur de cp \n");
-        return 0;
-    }
-
-    if (!verification(q, s, cq))
-    {
-        printf("Erreur dans la valeur de cq \n");
+        printf("Erreur dans la valeur de cp ou cq\n");
         return 0;
     }
 
@@ -291,13 +277,13 @@ int attaque_spa(Liste_Diviseur *pliste, Liste_Diviseur *qliste, int ptaille_list
     unsigned int nb_bits_cq = mpz_sizeinbase(cq, 2);
 
     if (nb_bits_cp < TRESHOLD_S && nb_bits_cq < TRESHOLD_S)
-        printf("Pas assez de bits pour faire l'attaque cp : (%d bits reel < %d bits requis ) cq : (%d bits reel < %d bits requis ) \n", nb_bits_cp, TRESHOLD_S, nb_bits_cq, TRESHOLD_S);
+        printf("Pas assez de bits pour faire l'attaque \ncp : (%d bits reel < %d bits requis )\ncq : (%d bits reel < %d bits requis ) \n", nb_bits_cp, TRESHOLD_S, nb_bits_cq, TRESHOLD_S);
     else
     {
         printf("Attaque possible : \n");
         if (nb_bits_cp > nb_bits_cq)
             printf("Conseille avec cp : %d bits \n", nb_bits_cp);
-        else if( nb_bits_cp < nb_bits_cq)
+        else if (nb_bits_cp < nb_bits_cq)
             printf("Conseille avec cq : %d bits \n", nb_bits_cq);
         else
             printf("Equivalence entre cp et cq en terme de taille\n");
@@ -338,7 +324,6 @@ int main(int argc, char **argv)
 
     // afficher_liste(pliste_sans_doublon, ptaille_liste_sans_doublon);
     //  afficher_liste(qliste_sans_doublon, qtaille_liste_sans_doublon);
-
     attaque_spa(pliste_sans_doublon, qliste_sans_doublon, ptaille_liste_sans_doublon, qtaille_liste_sans_doublon, m1, m2, n, p, q);
 
     mpz_clears(n, p, q, NULL);
