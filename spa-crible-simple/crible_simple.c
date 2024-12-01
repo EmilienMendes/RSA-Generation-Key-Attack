@@ -1,25 +1,34 @@
 #include "crible_simple.h"
 
-void ecriture_parametres(mpz_t p,mpz_t q,mpz_t n,char *fichier){
-    FILE * file = fopen(fichier,"w");
-    gmp_fprintf(file,"n = %Zd\n",n);
-    gmp_fprintf(file,"p = %Zd\n",p);
-    gmp_fprintf(file,"q = %Zd\n",q);
-    fclose(file);
+/**
+ * Ecriture des parametres RSA dans un fichier
+ * @param p entier de la cle privee
+ * @param q entier de la cle privee
+ * @param fichier fichier d'ecriture cle publique / cle privee
+ */
+void ecriture_parametres(mpz_t p, mpz_t q, mpz_t n, char *fichier)
+{
+    FILE *fptr = fopen(fichier, "w");
+    gmp_fprintf(fptr, "n = %Zd\n", n);
+    gmp_fprintf(fptr, "p = %Zd\n", p);
+    gmp_fprintf(fptr, "q = %Zd\n", q);
+    fclose(fptr);
 }
 
-
-
-/*
-Parametres :
-N -> Nombre d'entiers dans le crible simple
-k -> Taille en bit du nombre voulu
-t -> Nombre de tours de Miller-Rabin
-*/
+/**
+ * Generation d'un entier premier par la methode du crible simple
+ * @param k Taille en bit du nombre voulu
+ * @param N Nombre d'entiers dans le crible simple
+ * @param t Nombre de tours de Miller-Rabin
+ * @param p entier premier genere
+ * @param r liste des premiers nombres premiers par lequels on va tester la division
+ * @param generator generateur de valeur aleatoire
+ * @param fichier fichier ou on stocke la trace simule par l'attaque spa
+ */
 
 void generation_entier_crible_simple(unsigned int k, unsigned int N, unsigned int t, mpz_t p, mpz_t *r, gmp_randstate_t generator, char *fichier)
 {
-    FILE *file = fopen(fichier, "w");
+    FILE *fptr = fopen(fichier, "w");
     mpz_t v;
     mpz_init(v);
 
@@ -32,64 +41,64 @@ void generation_entier_crible_simple(unsigned int k, unsigned int N, unsigned in
     mpz_urandomb(v, generator, k);
     mpz_setbit(v, k - 1);
     mpz_setbit(v, 0);
-    int cpt = 0;
     if (mpz_probab_prime_p(v, t) == 0)
     {
         while (TRUE)
         {
             i = 1;
-            fprintf(file, "%d\n", LIGNE1);
+            fprintf(fptr, "%d\n", LIGNE1);
             // Verification de la non divisiblite du nombre par les N petits premiers
             while (i < N)
             {
-                fprintf(file, "%d\n", LIGNE2);
+                fprintf(fptr, "%d\n", LIGNE2);
 
                 divisible = mpz_divisible_p(v, r[i]);
-                fprintf(file, "%d\n", LIGNE3);
+                fprintf(fptr, "%d\n", LIGNE3);
                 if (divisible != 0)
                 {
-                    // gmp_printf("j : %d divisible par %Zd\n",cpt, r[i]);
-                    fprintf(file, "%d\n", LIGNE4);
+                    fprintf(fptr, "%d\n", LIGNE4);
                     mpz_add_ui(v, v, 2);
                     break;
                 }
-                fprintf(file, "%d\n", LIGNE5);
+                fprintf(fptr, "%d\n", LIGNE5);
 
                 i++;
             }
             /*
-            Verification si le nombre est divisible par l'un des k elements.
-            Si c'est le cas, passe a la condition suivante.
-            Sinon, on verifie si le nombre est premier, et on s'arrete si la condition est verifie
-            Si le nombre n'est pas premier, on ajoute 2 et  on recommence.
+            Verification si le nombre a ete divise l'un des N premiers.
+            Si c'est verifie on repasse au debut de la boucle avec un nouvel entier premier
+            Sinon, on fais le test de miller rabin, et on s'arrete si la condition est verifie
             */
+
             if (!divisible)
             {
-                fprintf(file, "%d\n", LIGNE6);
+                fprintf(fptr, "%d\n", LIGNE6);
 
                 if (mpz_probab_prime_p(v, t))
                     break;
                 else
                 {
-                    fprintf(file, "%d\n", LIGNE7);
+                    fprintf(fptr, "%d\n", LIGNE7);
                     mpz_add_ui(v, v, 2);
                 }
             }
-            cpt++;
         }
     }
     mpz_set(p, v);
     mpz_clear(v);
-    fprintf(file, "%d\n", LIGNE1);
-    fclose(file);
+    fprintf(fptr, "%d\n", LIGNE1);
+    fclose(fptr);
 }
 
-/*
-@TODO
-Ajouter des conditions pour l'utilisation du programme argc,argv
-*/
 int main(int argc, char **argv)
 {
+    if (argc != 7)
+    {
+        printf("Usage : %s <k> <N> <t> <nom fichier 1> <nom fichier 2> <nom fichier 3>\n", argv[0]);
+        printf(" k : nombre de bit du nombres \nN : nombre de petits premier\nt : nombre de tours de Miller Rabin\n");
+        printf("nom fichier 1 : fichier avec la trace de p \nnom fichier 2 : fichier avec la trace de q\nnom fichier 3 : fichier contenant les parametres n,p,q");
+        return 1;
+    }
     // Variable utilisateur
     int k = atoi(argv[1]);
     int N = atoi(argv[2]);
@@ -99,8 +108,8 @@ int main(int argc, char **argv)
     char *parametres = argv[6];
     unsigned int seed = time(NULL);
     // Initialisation des valeurs pour le crible
-    mpz_t p,q,n;
-    mpz_inits(p,q,n,NULL);
+    mpz_t p, q, n;
+    mpz_inits(p, q, n, NULL);
 
     mpz_t *r;
     r = generation_liste_nombres_premiers(N);
@@ -108,15 +117,16 @@ int main(int argc, char **argv)
     gmp_randstate_t generator;
     gmp_randinit_default(generator);
     gmp_randseed_ui(generator, seed);
+
+    // Generation de p et q et de leurs traces respectives
     generation_entier_crible_simple(k, N, t, p, r, generator, ptrace);
     generation_entier_crible_simple(k, N, t, q, r, generator, qtrace);
 
-    mpz_mul(n,p,q);
-    // if(mpz_probab_prime_p(p,10) && mpz_probab_prime_p(q,10) )
-    ecriture_parametres(p,q,n,parametres);
-
+    // Creation de la cle publique a partir de p et q et ecriture
+    mpz_mul(n, p, q);
+    ecriture_parametres(p, q, n, parametres);
 
     gmp_randclear(generator);
-    mpz_clears(p,q,n,NULL);
+    mpz_clears(p, q, n, NULL);
     return 0;
 }
