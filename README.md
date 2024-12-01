@@ -33,3 +33,37 @@ q = c<sub>q</sub> mod s <br>
 s = lcm(s<sub>p</sub>,s<sub>q</sub>)
 
 Pour retrouver p et q, il faudrait appliquer l'algorithme [LLL](https://fr.wikipedia.org/wiki/Algorithme_LLL), ce qui n'a pas été effectué dans le cadre de notre implémentation.
+
+
+
+
+
+## Utilisation
+### Prérequis
+Il suffit d'installer make pour pouvoir compiler de manière automatique
+
+### Compilation
+1. Cloner le repository:  
+   ```bash
+   git clone https://github.com/EmilienMendes/RSA-Generation-Key-Attack.git
+2. Compiler toutes les règles: 
+    ```bash 
+    make compilation
+###  Exécution du programme
+#### SPA
+Il y a deux étapes à effectuer pour faire l'attaque
+- Créer les nombres premiers p et q et générer leur trace associé
+- Attaquer les deux traces pour retrouver c<sub>p</sub> et c<sub>q</sub>
+
+1. Générer les trace
+```bash 
+make acquisition_trace_spa
+```
+2. Attaquer les traces
+```bash 
+make attaque_spa
+```
+Une autre alternative pour faire les deux étapes en une seul fois
+``` bash
+make spa
+```
