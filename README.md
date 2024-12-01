@@ -22,8 +22,8 @@ p = v<sub>0</sub> + 2 x m  = v<sub>jn</sub> + 2 x ( m - j<sub>n</sub>) = 2 x ( m
 
 En utilisant le theoreme des restes chinois on trouve
 
-p = a<sub>p</sub> mod s<sub>p</sub> avec s<sub>p</sub> = $\prod_{r \in S_p} r $ <br> 
-q = a<sub>q</sub> mod s<sub>q</sub> avec s<sub>q</sub> = $\prod_{r \in S_q} r $ <br> 
+p = a<sub>p</sub> mod s<sub>p</sub> avec s<sub>p</sub> = $$\prod r_{r \in S_p}  $$ <br> 
+q = a<sub>q</sub> mod s<sub>q</sub> avec s<sub>q</sub> = $$\prod r_{r \in S_q} $$ <br> 
 
 On peut aussi retrouver a<sub>q</sub> et b<sub>p</sub> en utilisant l'inversion modulaire et en multipliant par n. <br>
 Cela permet de retrouver les valeur finales avec le théorème des restes chinois 
@@ -55,7 +55,7 @@ Il y a deux étapes à effectuer pour faire l'attaque
 - Créer les nombres premiers p et q et générer leur trace associé
 - Attaquer les deux traces pour retrouver c<sub>p</sub> et c<sub>q</sub>
 
-1. Générer les trace
+1. Générer les traces
 ```bash 
 make acquisition_trace_spa
 ```
