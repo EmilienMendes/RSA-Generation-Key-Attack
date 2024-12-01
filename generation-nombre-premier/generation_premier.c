@@ -1,4 +1,4 @@
-#include "utility.h"
+#include "generation_premier.h"
 
 mpz_t *generation_liste_nombres_premiers(int N)
 {

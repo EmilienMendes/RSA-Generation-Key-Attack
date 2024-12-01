@@ -1,4 +1,4 @@
-#include "../utility/utility.h"
+#include "../generation-nombre-premier/generation_premier.h"
 #include "constante.h"
 #include <stdio.h>
 #include <time.h>
