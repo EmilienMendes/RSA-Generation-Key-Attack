@@ -12,4 +12,4 @@ void free_liste(int taille,mpz_t *liste);
 int verification_entier_nul(mpz_t *liste,int taille);
 
 // Fonction pour le crible optimise
-void generation_entier_crible_optimise(unsigned int k, unsigned int t, unsigned int N, mpz_t p, mpz_t *r, gmp_randstate_t generator);
+void generation_entier_crible_optimise(unsigned int k, unsigned int N, unsigned int t, mpz_t p, mpz_t *s, char *trace,char *parametres, gmp_randstate_t generator);
