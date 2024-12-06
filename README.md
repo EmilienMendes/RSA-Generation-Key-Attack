@@ -40,7 +40,7 @@ Pour retrouver p et q, il faudrait appliquer l'algorithme [LLL](https://fr.wikip
 
 ## Utilisation
 ### Prérequis
-Il suffit d'installer make pour pouvoir compiler de manière automatique
+Il suffit d'installer make et gmp pour pouvoir compiler de manière automatique.
 
 ### Compilation
 1. Cloner le repository:  
@@ -67,3 +67,21 @@ Une autre alternative pour faire les deux étapes en une seul fois
 ``` bash
 make spa
 ```
+#### CPA
+On suit les mêmes étapes que pour la SPA
+- Créer le nombres premie p et générer sa trace 
+- Attaquer cette trace
+
+1. Générer la trace
+```bash 
+make acquisition_trace_cpa
+```
+2. Attaquer la trace
+```bash 
+make attaque_cpa
+```
+Une autre alternative pour faire les deux étapes en une seul fois
+``` bash
+make cpa
+```
+
