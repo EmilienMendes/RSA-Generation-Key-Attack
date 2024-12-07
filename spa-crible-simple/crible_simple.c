@@ -26,7 +26,7 @@ void ecriture_parametres(mpz_t p, mpz_t q, mpz_t n, char *fichier)
  * @param fichier fichier ou on stocke la trace simule par l'attaque spa
  */
 
-void generation_entier_crible_simple(unsigned int k, unsigned int N, unsigned int t, mpz_t p, mpz_t *r, gmp_randstate_t generator, char *fichier)
+void generation_entier_crible_simple(unsigned int k, unsigned int N, unsigned int t, mpz_t p, int *r, gmp_randstate_t generator, char *fichier)
 {
     FILE *fptr = fopen(fichier, "w");
     mpz_t v;
@@ -52,7 +52,7 @@ void generation_entier_crible_simple(unsigned int k, unsigned int N, unsigned in
             {
                 fprintf(fptr, "%d\n", LIGNE2);
 
-                divisible = mpz_divisible_p(v, r[i]);
+                divisible = mpz_divisible_ui_p(v, r[i]);
                 fprintf(fptr, "%d\n", LIGNE3);
                 if (divisible != 0)
                 {
@@ -111,8 +111,7 @@ int main(int argc, char **argv)
     mpz_t p, q, n;
     mpz_inits(p, q, n, NULL);
 
-    mpz_t *r;
-    r = generation_liste_nombres_premiers(N);
+    int *r = generation_liste_nombres_premiers(N);
     // Generateur pseudo aleatoires
     gmp_randstate_t generator;
     gmp_randinit_default(generator);
@@ -126,6 +125,7 @@ int main(int argc, char **argv)
     mpz_mul(n, p, q);
     ecriture_parametres(p, q, n, parametres);
 
+    free(r);
     gmp_randclear(generator);
     mpz_clears(p, q, n, NULL);
     return 0;

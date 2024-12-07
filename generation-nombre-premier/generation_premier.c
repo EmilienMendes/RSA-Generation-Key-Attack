@@ -5,16 +5,15 @@
  * @param N quantite de nombres premiers a generer
  * @return la liste ordonne des N plus petits nombres premiers
  */
-mpz_t *generation_liste_nombres_premiers(int N)
+int *generation_liste_nombres_premiers(int N)
 {
-    mpz_t *liste = (mpz_t *)malloc(N * sizeof(mpz_t));
-    mpz_init_set_ui(liste[0], 2);
-    unsigned int element = 1;
-    while (element < N)
+    int *liste = (int *)malloc(N * sizeof(int));
+    mpz_t premier;
+    mpz_init_set_ui(premier, 2);
+    for (int i = 0; i < N; i++)
     {
-        mpz_init(liste[element]);
-        mpz_nextprime(liste[element], liste[element - 1]);
-        element++;
+        liste[i] = mpz_get_ui(premier);
+        mpz_nextprime(premier,premier);
     }
     return liste;
 }

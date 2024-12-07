@@ -40,7 +40,7 @@ Liste_Diviseur *recuperer_diviseur(int N, char *fichier, int *taille_liste, int 
     FILE *fptr = fopen(fichier, "r");
     char buffer[BUFF_SIZE];
     unsigned int r, valeur_courant_actuel, valeur_courant_precedent;
-    mpz_t *liste_premiers = generation_liste_nombres_premiers(N);
+    int *liste_premiers = generation_liste_nombres_premiers(N);
 
     /*
     On passe une premiere fois dans le fichier pour recuperer le nombre de fois
@@ -82,7 +82,7 @@ Liste_Diviseur *recuperer_diviseur(int N, char *fichier, int *taille_liste, int 
         // Enchainement de ligne 3 & ligne 4 => signifie que le nombre a ete divise par pj
         if (valeur_courant_precedent == LIGNE3 && valeur_courant_actuel == LIGNE4)
         {
-            liste[nb_diviseur].r = mpz_get_ui(liste_premiers[r]);
+            liste[nb_diviseur].r = liste_premiers[r];
             liste[nb_diviseur].j = j;
             nb_diviseur++;
         }
@@ -95,7 +95,7 @@ Liste_Diviseur *recuperer_diviseur(int N, char *fichier, int *taille_liste, int 
         }
     }
 
-    free_liste(N, liste_premiers);
+    free(liste_premiers);
     return liste;
 }
 
