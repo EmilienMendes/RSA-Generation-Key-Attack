@@ -13,7 +13,7 @@ unsigned int *generation_liste_nombres_premiers(unsigned int N)
     for (unsigned int i = 0; i < N; i++)
     {
         liste[i] = mpz_get_ui(premier);
-        mpz_nextprime(premier,premier);
+        mpz_nextprime(premier, premier);
     }
     return liste;
 }
