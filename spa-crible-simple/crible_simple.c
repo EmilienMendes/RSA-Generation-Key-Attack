@@ -26,7 +26,7 @@ void ecriture_parametres(mpz_t p, mpz_t q, mpz_t n, char *fichier)
  * @param fichier fichier ou on stocke la trace simule par l'attaque spa
  */
 
-void generation_entier_crible_simple(unsigned int k, unsigned int N, unsigned int t, mpz_t p, int *r, gmp_randstate_t generator, char *fichier)
+void generation_entier_crible_simple(unsigned int k, unsigned int N, unsigned int t, mpz_t p, unsigned int *r, gmp_randstate_t generator, char *fichier)
 {
     FILE *fptr = fopen(fichier, "w");
     mpz_t v;
@@ -100,9 +100,9 @@ int main(int argc, char **argv)
         return 1;
     }
     // Variable utilisateur
-    int k = atoi(argv[1]);
-    int N = atoi(argv[2]);
-    int t = atoi(argv[3]);
+    unsigned int k = atoi(argv[1]);
+    unsigned int N = atoi(argv[2]);
+    unsigned int t = atoi(argv[3]);
     char *ptrace = argv[4];
     char *qtrace = argv[5];
     char *parametres = argv[6];
@@ -111,7 +111,7 @@ int main(int argc, char **argv)
     mpz_t p, q, n;
     mpz_inits(p, q, n, NULL);
 
-    int *r = generation_liste_nombres_premiers(N);
+    unsigned int *r = generation_liste_nombres_premiers(N);
     // Generateur pseudo aleatoires
     gmp_randstate_t generator;
     gmp_randinit_default(generator);

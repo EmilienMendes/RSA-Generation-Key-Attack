@@ -28,8 +28,8 @@ typedef enum
 */
 typedef struct
 {
-   int j;
-   int r;
+   unsigned int j;
+   unsigned int r;
 } Liste_Diviseur;
 
 #endif

@@ -5,12 +5,12 @@
  * @param N quantite de nombres premiers a generer
  * @return la liste ordonne des N plus petits nombres premiers
  */
-int *generation_liste_nombres_premiers(int N)
+unsigned int *generation_liste_nombres_premiers(unsigned int N)
 {
-    int *liste = (int *)malloc(N * sizeof(int));
+    unsigned int *liste = (unsigned int *)malloc(N * sizeof(unsigned int));
     mpz_t premier;
     mpz_init_set_ui(premier, 2);
-    for (int i = 0; i < N; i++)
+    for (unsigned int i = 0; i < N; i++)
     {
         liste[i] = mpz_get_ui(premier);
         mpz_nextprime(premier,premier);
@@ -23,9 +23,9 @@ int *generation_liste_nombres_premiers(int N)
  * @param taille taille de la liste
  * @param liste liste a supprimer
  */
-void free_liste(int taille, mpz_t *liste)
+void free_liste(unsigned int taille, mpz_t *liste)
 {
-    for (int i = 0; i < taille; i++)
+    for (unsigned int i = 0; i < taille; i++)
         mpz_clear(liste[i]);
     free(liste);
 }
