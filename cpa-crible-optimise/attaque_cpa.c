@@ -114,7 +114,6 @@ unsigned int argmax(unsigned int *liste, int taille_liste)
  */
 void theoreme_reste_chinois(unsigned int *a, unsigned int *r, mpz_t x)
 {
-    
 }
 
 /**
@@ -169,7 +168,7 @@ int main(int argc, char **argv)
     char *parametres = argv[3];
     mpz_t p;
     mpz_init(p);
-    attaque_cpa(lambda, trace, parametres,p);
+    attaque_cpa(lambda, trace, parametres, p);
     mpz_clear(p);
     return 0;
 }

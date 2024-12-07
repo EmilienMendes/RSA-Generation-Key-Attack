@@ -5,7 +5,7 @@
  * @param liste liste des j et r
  * @param taille_liste taile de la liste
  */
-void afficher_liste(Liste_Diviseur *liste, unsigned int  taille_liste)
+void afficher_liste(Liste_Diviseur *liste, unsigned int taille_liste)
 {
     for (unsigned int i = 0; i < taille_liste; i++)
         printf("j : %d r : %d\n", liste[i].j, liste[i].r);
@@ -39,7 +39,7 @@ Liste_Diviseur *recuperer_diviseur(unsigned int N, char *fichier, unsigned int *
 {
     FILE *fptr = fopen(fichier, "r");
     char buffer[BUFF_SIZE];
-    unsigned int  r, valeur_courant_actuel, valeur_courant_precedent;
+    unsigned int r, valeur_courant_actuel, valeur_courant_precedent;
     unsigned int *liste_premiers = generation_liste_nombres_premiers(N);
 
     /*
@@ -63,12 +63,12 @@ Liste_Diviseur *recuperer_diviseur(unsigned int N, char *fichier, unsigned int *
     // On revient au debut du fichier pour recuper les diviseurs
     fseek(fptr, 0, SEEK_SET);
 
-    unsigned int  nb_diviseur = 0;
+    unsigned int nb_diviseur = 0;
     /*
         On commence a j = -1 car on va incrementer a chaque debut de boucle c'est a dire
         quand on commence a chercher les diviseurs pour le vj courant
     */
-    unsigned int  j = -1;
+    unsigned int j = -1;
 
     while (fgets(buffer, BUFF_SIZE, fptr) != NULL)
     {
@@ -107,9 +107,9 @@ Liste_Diviseur *recuperer_diviseur(unsigned int N, char *fichier, unsigned int *
  * @return liste des diviseurs uniques avec leur congruences et leur modulos
 
 */
-Liste_Diviseur *enlever_doublon(Liste_Diviseur *liste, unsigned int  taille_liste, unsigned int  *taille_sans_doublon)
+Liste_Diviseur *enlever_doublon(Liste_Diviseur *liste, unsigned int taille_liste, unsigned int *taille_sans_doublon)
 {
-    unsigned int  doublon = 0;
+    unsigned int doublon = 0;
 
     /*
     On recupere le nombre de doublon et on categorise les doublons
@@ -137,7 +137,7 @@ Liste_Diviseur *enlever_doublon(Liste_Diviseur *liste, unsigned int  taille_list
     Liste_Diviseur *liste_sans_doublon = (Liste_Diviseur *)malloc(sizeof(Liste_Diviseur) * *(taille_sans_doublon));
 
     // Ajout des valeurs de tous les diviseurs uniques, de leur congruence et de leur modulo
-    unsigned int  nb_diviseur_unique = 0;
+    unsigned int nb_diviseur_unique = 0;
     for (unsigned int i = 0; i < taille_liste; i++)
     {
         // Si l'element est un doublon on ne l'ajoute pas a la liste
@@ -188,7 +188,7 @@ void calcul_produit(mpz_t s, Liste_Diviseur *liste, unsigned int taille_liste)
  */
 void theoreme_reste_chinois(Liste_Diviseur *liste, unsigned int taille_liste, unsigned int m, mpz_t s, mpz_t x)
 {
-    unsigned int  ai;
+    unsigned int ai;
     mpz_t Mi, yi, ri;
     mpz_inits(Mi, yi, ri, NULL);
 
@@ -244,7 +244,7 @@ unsigned int verification(mpz_t premier, mpz_t s, mpz_t x)
     mpz_t tmp;
     mpz_init(tmp);
     mpz_mod(tmp, premier, s);
-    unsigned int  comparaison = (mpz_cmp(tmp, x) == 0);
+    unsigned int comparaison = (mpz_cmp(tmp, x) == 0);
     mpz_clear(tmp);
     return comparaison;
 }
@@ -327,10 +327,10 @@ unsigned int attaque_spa(Liste_Diviseur *pliste, Liste_Diviseur *qliste, unsigne
     gmp_printf("cp = %Zd\n", cp);
     gmp_printf("cq = %Zd\n", cq);
 
-    unsigned int  nb_bits_cp = mpz_sizeinbase(cp, 2);
-    unsigned int  nb_bits_cq = mpz_sizeinbase(cq, 2);
+    unsigned int nb_bits_cp = mpz_sizeinbase(cp, 2);
+    unsigned int nb_bits_cq = mpz_sizeinbase(cq, 2);
 
-    unsigned int  attaque_possible = FALSE;
+    unsigned int attaque_possible = FALSE;
     if (nb_bits_cp < TRESHOLD_S && nb_bits_cq < TRESHOLD_S)
         printf("Pas assez de bits pour faire l'attaque \ncp : (%d bits reel < %d bits requis )\ncq : (%d bits reel < %d bits requis ) \n", nb_bits_cp, TRESHOLD_S, nb_bits_cq, TRESHOLD_S);
     else
