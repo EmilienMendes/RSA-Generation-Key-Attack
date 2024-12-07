@@ -1,6 +1,6 @@
 #include "crible_optimise.h"
 
-int verification_entier_nul(mpz_t *liste, int taille)
+unsigned int verification_entier_nul(mpz_t *liste, unsigned int taille)
 {
     for (unsigned int i = 0; i < taille; i++)
     {
@@ -23,7 +23,7 @@ int verification_entier_nul(mpz_t *liste, int taille)
  * @param parametres fichier qui contiendra les valeurs des entiers RSA (p,n)
  * @param generator generateur de nombre aleatoire
  */
-void generation_entier_crible_optimise(unsigned int k, unsigned int N, unsigned int t, mpz_t p, mpz_t *s, char *trace,char *parametres, gmp_randstate_t generator)
+void generation_entier_crible_optimise(unsigned int k, unsigned int N, unsigned int t, mpz_t p, unsigned int *s, char *trace, char *parametres, gmp_randstate_t generator)
 {
     mpz_t v;
     mpz_init(v);
@@ -40,7 +40,7 @@ void generation_entier_crible_optimise(unsigned int k, unsigned int N, unsigned 
     for (unsigned int j = 0; j < N; j++)
     {
         mpz_init(r[j]);
-        mpz_mod(r[j], v, s[j]);
+        mpz_mod_ui(r[j], v, s[j]);
     }
 
     unsigned int prime = mpz_probab_prime_p(v, t);
@@ -74,16 +74,16 @@ int main(int argc, char **argv)
     }
 
     // Variable utilisateur
-    int k = atoi(argv[1]);
-    int N = atoi(argv[2]);
-    int t = atoi(argv[3]);
+    unsigned int k = atoi(argv[1]);
+    unsigned int N = atoi(argv[2]);
+    unsigned int t = atoi(argv[3]);
     char *ptrace = argv[4];
     char *parametres = argv[4];
     // Initialisation des valeurs pour le crible
     mpz_t p;
     mpz_init(p);
 
-    mpz_t *r;
+    unsigned int *r;
     r = generation_liste_nombres_premiers(N);
     // Generateur pseudo aleatoires
     gmp_randstate_t generator;
@@ -91,7 +91,7 @@ int main(int argc, char **argv)
     gmp_randseed_ui(generator, time(NULL));
 
     generation_entier_crible_optimise(k, N, t, p, r, ptrace, parametres, generator);
-    
+
     mpz_clear(p);
     return 0;
 }
