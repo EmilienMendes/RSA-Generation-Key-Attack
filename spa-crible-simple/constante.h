@@ -1,3 +1,6 @@
+#ifndef __CONSTANTE_H__
+#define __CONSTANTE_H__
+
 #define TRUE 1
 #define FALSE 0
 
@@ -28,3 +31,5 @@ typedef struct
    int j;
    int r;
 } Liste_Diviseur;
+
+#endif

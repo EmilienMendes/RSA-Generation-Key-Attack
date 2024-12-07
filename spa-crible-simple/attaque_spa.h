@@ -1,5 +1,7 @@
-#include "../generation-nombre-premier/generation_premier.h"
+#ifndef __ATTAQUE_SPA_H__
+#define __ATTAQUE_SPA_H__
 
+#include "../generation-nombre-premier/generation_premier.h"
 #include "constante.h"
 #include <stdio.h>
 
@@ -21,3 +23,5 @@ void theoreme_reste_chinois_simplifie(mpz_t x, mpz_t a1, mpz_t a2, mpz_t r1, mpz
 // Attaque et verification du fonctionnement
 int attaque_spa(Liste_Diviseur *pliste, Liste_Diviseur *qliste, int ptaille_liste, int qtaille_liste, mpz_t s, mpz_t cp, mpz_t cq, int m1, int m2, mpz_t n);
 int verification(mpz_t premier, mpz_t s, mpz_t x);
+
+#endif
