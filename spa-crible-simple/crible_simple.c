@@ -107,6 +107,8 @@ int main(int argc, char **argv)
     char *qtrace = argv[5];
     char *parametres = argv[6];
     unsigned int seed = time(NULL);
+    // TODO Remettre la seed "aleatoire"
+    seed = 1733573807;
     // Initialisation des valeurs pour le crible
     mpz_t p, q, n;
     mpz_inits(p, q, n, NULL);

@@ -21,7 +21,7 @@ void theoreme_reste_chinois(Liste_Diviseur *liste, unsigned int taille_liste, un
 void theoreme_reste_chinois_simplifie(mpz_t x, mpz_t a1, mpz_t a2, mpz_t r1, mpz_t r2);
 
 // Attaque et verification du fonctionnement
-unsigned int attaque_spa(Liste_Diviseur *pliste, Liste_Diviseur *qliste, unsigned int ptaille_liste, unsigned int qtaille_liste, mpz_t s, mpz_t cp, mpz_t cq, unsigned int m1, unsigned int m2, mpz_t n);
+unsigned int attaque_spa(Liste_Diviseur *pliste, Liste_Diviseur *qliste, unsigned int ptaille_liste, unsigned int qtaille_liste, mpz_t s, mpz_t cp, mpz_t cq, unsigned int m1, unsigned int m2, unsigned int k ,mpz_t n);
 unsigned int verification(mpz_t premier, mpz_t s, mpz_t x);
 
 #endif

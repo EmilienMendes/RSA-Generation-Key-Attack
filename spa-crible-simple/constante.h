@@ -4,8 +4,6 @@
 #define TRUE 1
 #define FALSE 0
 
-// Nombre de bits minimum pour effectuer l'attaque
-#define TRESHOLD_S 128
 /*
  Valeur de consommation de courant pour chacune des lignes
  Valeur choisie aleatoirement apres plusieurs essais pour

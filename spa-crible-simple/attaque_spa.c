@@ -260,10 +260,11 @@ unsigned int verification(mpz_t premier, mpz_t s, mpz_t x)
  * @param cq valeur congru a q modulo s
  * @param m1 entier qui verifie la relation p = v0 + 2 x m1
  * @param m2 entier qui verifie la relation q = v0 + 2 x m2
+ * @param k taille en bits des entiers p et q
  * @param n entier publique de RSA tel que n = p x q
- * @return 1 si l'attaque est envisageable 0 sinon
+ * @return 2 (attaque par cp) 1 ( attaque par cq) 0 (pas assez de bits d'information pour attaquer)
  */
-unsigned int attaque_spa(Liste_Diviseur *pliste, Liste_Diviseur *qliste, unsigned int ptaille_liste, unsigned int qtaille_liste, mpz_t s, mpz_t cp, mpz_t cq, unsigned int m1, unsigned int m2, mpz_t n)
+unsigned int attaque_spa(Liste_Diviseur *pliste, Liste_Diviseur *qliste, unsigned int ptaille_liste, unsigned int qtaille_liste, mpz_t s, mpz_t cp, mpz_t cq, unsigned int m1, unsigned int m2, unsigned int k, mpz_t n)
 {
     mpz_t sp, sq;
     /*
@@ -331,37 +332,66 @@ unsigned int attaque_spa(Liste_Diviseur *pliste, Liste_Diviseur *qliste, unsigne
     unsigned int nb_bits_cq = mpz_sizeinbase(cq, 2);
 
     unsigned int attaque_possible = FALSE;
-    if (nb_bits_cp < TRESHOLD_S && nb_bits_cq < TRESHOLD_S)
-        printf("Pas assez de bits pour faire l'attaque \ncp : (%d bits reel < %d bits requis )\ncq : (%d bits reel < %d bits requis ) \n", nb_bits_cp, TRESHOLD_S, nb_bits_cq, TRESHOLD_S);
+    if (nb_bits_cp < k / 2 && nb_bits_cq < k / 2)
+        printf("Pas assez de bits pour faire l'attaque \ncp : (%d bits reel < %d bits requis )\ncq : (%d bits reel < %d bits requis ) \n", nb_bits_cp, k / 2, nb_bits_cq, k / 2);
     else
     {
-        attaque_possible = TRUE;
-        printf("Attaque possible : \n");
+        printf("Attaque possible ");
         if (nb_bits_cp > nb_bits_cq)
-            printf("Conseille avec cp : %d bits \n", nb_bits_cp);
+        {
+            attaque_possible = 2;
+            printf("avec cp : %d bits \n", nb_bits_cp);
+        }
         else if (nb_bits_cp < nb_bits_cq)
-            printf("Conseille avec cq : %d bits \n", nb_bits_cq);
+        {
+            attaque_possible = 1;
+            printf("avec cq : %d bits \n", nb_bits_cq);
+        }
         else
-            printf("Equivalence entre cp et cq en terme de taille\n");
+        {
+            attaque_possible = 1;
+            printf("avec cp ou cq : %d bits tous les deux\n", nb_bits_cp);
+        }
     }
 
     mpz_clears(ap, aq, bp, bq, sp, sq, sp_bis, sq_bis, pgcd_s, NULL);
     return attaque_possible;
 }
 
+void exhaustif(mpz_t c, mpz_t s, unsigned int k, mpz_t n)
+{
+    unsigned int ancienne_taille_c = 0;
+    unsigned int taille_c;
+    while ((taille_c = mpz_sizeinbase(c, 2)) < k)
+    {
+        if (ancienne_taille_c != taille_c)
+        {
+            ancienne_taille_c = taille_c;
+            printf("nb bits : %d \n", taille_c);
+        }
+        mpz_add(c, c, s);
+    }
+    while (!mpz_divisible_p(n, c))
+    {
+        mpz_add(c, c, s);
+    }
+    gmp_printf("p : %Zd\n", c);
+}
+
 int main(int argc, char **argv)
 {
-    if (argc != 5)
+    if (argc != 6)
     {
-        printf("Usage : %s <N> <nom fichier 1> <nom fichier 2> <nom fichier 3>\n", argv[0]);
-        printf("N : nombre de petit premiers\n");
+        printf("Usage : %s <N> <k> <nom fichier 1> <nom fichier 2> <nom fichier 3>\n", argv[0]);
+        printf("N : nombre de petit premiers\nk: taille de l'entier RSA\n");
         printf("nom fichier 1 : trace de p\nnom fichier 2 : trace de q\nnom fichier 3 : fichier de parametres contenant n,p,q\n");
         return 1;
     }
     unsigned int N = atoi(argv[1]);
-    char *ptrace = argv[2];
-    char *qtrace = argv[3];
-    char *fichier_parametres = argv[4];
+    unsigned int k = atoi(argv[2]);
+    char *ptrace = argv[3];
+    char *qtrace = argv[4];
+    char *fichier_parametres = argv[5];
 
     unsigned int m1 = 0;
     unsigned int m2 = 0;
@@ -387,8 +417,7 @@ int main(int argc, char **argv)
 
     // afficher_liste(pliste_sans_doublon, ptaille_liste_sans_doublon);
     //  afficher_liste(qliste_sans_doublon, qtaille_liste_sans_doublon);
-
-    attaque_spa(pliste_sans_doublon, qliste_sans_doublon, ptaille_liste_sans_doublon, qtaille_liste_sans_doublon, s, cp, cq, m1, m2, n);
+    unsigned int attaque_possible = attaque_spa(pliste_sans_doublon, qliste_sans_doublon, ptaille_liste_sans_doublon, qtaille_liste_sans_doublon, s, cp, cq, m1, m2, k, n);
 
     // Verification avec les vrais valeurs de p et de q
     if (!verification(p, s, cp))
@@ -396,6 +425,17 @@ int main(int argc, char **argv)
 
     if (!verification(q, s, cq))
         printf("Erreur dans la valeur de cq\n");
+
+    if (attaque_possible == 1 || attaque_possible == 2)
+    {
+        char reponse;
+        printf("Effectuer l'attaque [o/n] : ");
+        scanf(" %c", &reponse);
+        if (reponse == 'o' && attaque_possible == 1)
+            exhaustif(cp, s, k, n);
+        if (reponse == 'o' && attaque_possible == 2)
+            exhaustif(cq, s, k, n);
+    }
 
     mpz_clears(n, p, q, s, cp, cq, NULL);
     free(pliste);
