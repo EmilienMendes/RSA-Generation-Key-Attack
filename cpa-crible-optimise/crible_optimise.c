@@ -50,8 +50,10 @@ void generation_entier_crible_optimise(unsigned int k, unsigned int N, unsigned 
         while (verification_entier_nul(r, N))
         {
             mpz_add_ui(v, v, 2);
-            for (unsigned int j = 0; j < N; j++)
+            for (unsigned int j = 0; j < N; j++){
                 mpz_add_ui(r[j], r[j], 2);
+                mpz_mod_ui(r[j],r[j],s[j]);
+            }
         }
         // Test Miller Rabin
         if ((prime = mpz_probab_prime_p(v, t)) == 0)
