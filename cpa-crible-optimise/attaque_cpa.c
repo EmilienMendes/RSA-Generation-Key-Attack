@@ -86,9 +86,37 @@ unsigned int poids_hamming(unsigned int nombre)
     return poids_hamming;
 }
 
-unsigned int distingueur(Tableau m, Tableau l, int i)
+/**
+ * @param m tableau des poids de hamming
+ * @param l tableau de mesure
+ * @param i index du tableau utilise
+ * @param lambda largeur du tableau
+ * @return coefficient de correlation de Pearson entre m[i] et l[i] (de taille lambda)
+ */
+float distingueur(Tableau m, Tableau l, int i, int lambda)
 {
-    return 0;
+    //
+    float moyenne_x, moyenne_y;
+    for (int j = 0; j < lambda; j++)
+    {
+        moyenne_x += m.tab[i][j];
+        moyenne_y += l.tab[i][j];
+    }
+
+    moyenne_x /= lambda;
+    moyenne_y /= lambda;
+
+    float correlation;
+    float denominateur = 0;
+    float numerateur = 0;
+
+    for (int j = 0; j < lambda; j++)
+    {
+        denominateur += (float)((m.tab[i][j] - moyenne_x) * (l.tab[i][j] - moyenne_y));
+        numerateur += sqrt(pow((m.tab[i][j] - moyenne_x), 2)) * sqrt(pow((l.tab[i][j] - moyenne_y), 2));
+    }
+    correlation = denominateur / numerateur;
+    return correlation;
 }
 
 /**
@@ -96,24 +124,44 @@ unsigned int distingueur(Tableau m, Tableau l, int i)
  * @param taille_liste taille de la liste a considerer
  * @return la valeur maximal du tableau
  */
-unsigned int argmax(unsigned int *liste, int taille_liste)
+unsigned int argmax(float *liste, int taille_liste)
 {
-    int max = liste[0];
+    int index_max = 0;
     for (unsigned int i = 1; i < taille_liste; i++)
     {
-        if (liste[i] > max)
-            max = liste[i];
+        if (liste[i] > liste[index_max])
+            index_max = i;
     }
-    return max;
+    return index_max;
 }
 
 /**
  * @param a liste des restes dans la formule
  * @param r liste des modulos dans la formule
+ * @param lambda nombre d'elements dans le systeme d'equation
  * @param x nombre retrouve
  */
-void theoreme_reste_chinois(unsigned int *a, unsigned int *r, mpz_t x)
+void theoreme_reste_chinois(unsigned int *a, unsigned int *r, unsigned int lambda, mpz_t x)
 {
+    mpz_t Mi, yi, ri, produit_modulo;
+    mpz_inits(Mi, yi, ri, NULL);
+
+    mpz_init_set_ui(produit_modulo, 1);
+    for (unsigned int i = 0; i < lambda; i++)
+        mpz_mul_ui(produit_modulo, produit_modulo, r[i]);
+
+    for (unsigned int i = 0; i < lambda; i++)
+    {
+        mpz_set_ui(ri, r[i]);
+        mpz_fdiv_q(Mi, produit_modulo, ri);
+        mpz_invert(yi, Mi, ri);
+
+        mpz_mul(yi, yi, Mi);      // yi = yi x Mi
+        mpz_mul_ui(yi, yi, a[i]); // yi = yi x Mi x ai
+        mpz_add(x, x, yi);        // ap += ai x yi x Mi
+    }
+    mpz_mod(x, x, produit_modulo);
+    mpz_clears(Mi, yi, ri, NULL);
 }
 
 /**
@@ -133,25 +181,35 @@ void attaque_cpa(unsigned int lambda, char *trace, char *parametres, mpz_t p)
     m.tab = (unsigned int **)malloc(sizeof(unsigned int *) * n);
     initialisation_tableau(m, n, lambda);
 
-    unsigned int *score;
+    // Creation tableau de la taillle maximal (meme si tout le tableau n'est pas forcement utilise)
+    float *score = (float *)malloc(sizeof(float) * s[lambda - 1]);
     unsigned int *candidat = (unsigned int *)malloc(sizeof(unsigned int) * lambda);
+
     for (unsigned int j = 0; j < lambda; j++)
     {
-        score = (unsigned int *)malloc(sizeof(int) * s[j]);
         for (unsigned int h = 1; h < s[j]; h++)
         {
             for (unsigned int i = 0; i < n; i++)
             {
                 m.tab[i][j] = poids_hamming((h - (n - i - 1) * 2) % s[j]);
-                score[h] = distingueur(m, l, i);
+                // Distingueur hors de la boucle ??
+                score[h] = distingueur(m, l, i, lambda);
             }
-            candidat[j] = argmax(score, s[j]);
         }
+        candidat[j] = argmax(score, s[j]);
     }
-    theoreme_reste_chinois(candidat, s, p);
+
+    printf("[");
+    for (int j = 0; j < lambda - 1; j++)
+        printf("%d,", candidat[j]);
+    printf("%d]\n", candidat[lambda - 1]);
+
+    theoreme_reste_chinois(candidat, s, lambda, p);
 
     free_tableau(l);
     free(s);
+    free(candidat);
+    free(score);
 }
 
 int main(int argc, char **argv)
@@ -162,7 +220,6 @@ int main(int argc, char **argv)
         printf("fichier1 : nom du fichier contenant la trace d'execution\nfichier2 : nom du fichier contenant les parametres RSA\n");
         return 1;
     }
-
     unsigned int lambda = atoi(argv[1]);
     char *trace = argv[2];
     char *parametres = argv[3];
