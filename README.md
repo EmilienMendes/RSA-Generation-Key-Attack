@@ -85,3 +85,7 @@ Une autre alternative pour faire les deux étapes en une seul fois
 make cpa
 ```
 
+Mesure : l(i,j) = a * poids_hamming(wi) + b 
+avec  a = 1 et b = gaussienne avec esperance = 0 et sigma $\in$ [0.5,3];
+Faire avec différents niveaux de bruits
+Faire les mesures avec plusieurs générations de premiers (proba de succès)

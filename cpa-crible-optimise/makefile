@@ -2,7 +2,7 @@ all : generation_premier_optimise attaque_cpa
 
 generation_premier_source := ../generation-nombre-premier/generation_premier.c
 k := 512
-N := 100
+N := 52
 t := 3
 
 ptrace := ptrace.txt

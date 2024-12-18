@@ -38,6 +38,29 @@ void free_tableau(Tableau t)
     free(t.tab);
 }
 
+// https://stackoverflow.com/questions/12733105/c-function-that-counts-lines-in-file
+int countlines(char *filename)
+{
+    // count the number of lines in the file called filename
+    FILE *fp = fopen(filename, "r");
+    int ch = 0;
+    int lines = 0;
+
+    if (fp == NULL)
+        return 0;
+
+    while (!feof(fp))
+    {
+        ch = fgetc(fp);
+        if (ch == '\n')
+        {
+            lines++;
+        }
+    }
+    fclose(fp);
+    return lines;
+}
+
 /**
  * Recuperation des mesures lie a la trace
  * @param fichier trace de l'execution du programme
@@ -48,8 +71,10 @@ Tableau recuperation_mesure(char *fichier, unsigned int lambda)
 {
     /* TODO
         Recuperation de n
+        n = taille du fichier / lambda
      */
-    unsigned int n = 10;
+    unsigned int n = countlines(fichier)/lambda;
+    printf("n : %d\n", n);
 
     Tableau l;
     l.tab = (unsigned int **)malloc(sizeof(unsigned int *) * n);
@@ -63,6 +88,7 @@ Tableau recuperation_mesure(char *fichier, unsigned int lambda)
         {
             /* TODO
                 Recuperation des mesures
+                Ordonnencement des valeurs
             */
             l.tab[i][j] = i * lambda + j;
         }

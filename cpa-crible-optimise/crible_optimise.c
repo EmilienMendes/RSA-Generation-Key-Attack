@@ -10,6 +10,22 @@ unsigned int verification_entier_nul(mpz_t *liste, unsigned int taille)
     return FALSE;
 }
 
+/**
+ * @param nombre entier dont on souhaite determiner son poids de Hamming
+ * @return nombre de 1 dans le nombre
+ */
+unsigned int poids_hamming(unsigned int nombre)
+{
+    unsigned int taille_entier = sizeof(unsigned int) * 8;
+    unsigned int poids_hamming = 0;
+    for (int i = 0; i < taille_entier; i++)
+    {
+        poids_hamming += (nombre & 1);
+        nombre = nombre >> 1;
+    }
+    return poids_hamming;
+}
+
 /* @TODO Ajouter l'utilisation de la trace lors de la generation
  */
 /**
@@ -25,6 +41,8 @@ unsigned int verification_entier_nul(mpz_t *liste, unsigned int taille)
  */
 void generation_entier_crible_optimise(unsigned int k, unsigned int N, unsigned int t, mpz_t p, unsigned int *s, char *trace, char *parametres, gmp_randstate_t generator)
 {
+    FILE *fptr = fopen(trace,"w");
+   
     mpz_t v;
     mpz_init(v);
     /*
@@ -51,18 +69,28 @@ void generation_entier_crible_optimise(unsigned int k, unsigned int N, unsigned 
         {
             mpz_add_ui(v, v, 2);
             for (unsigned int j = 0; j < N; j++){
+                // Peut etre poids hamming(r[j] + 2)
+                fprintf(fptr,"%d\n",poids_hamming(mpz_get_ui(r[j]))); 
                 mpz_add_ui(r[j], r[j], 2);
                 mpz_mod_ui(r[j],r[j],s[j]);
             }
         }
         // Test Miller Rabin
-        if ((prime = mpz_probab_prime_p(v, t)) == 0)
+        if ((prime = mpz_probab_prime_p(v, t)) == 0) {
             mpz_add_ui(v, v, 2);
+            for (unsigned int j = 0; j < N; j++){
+                // Peut etre poids hamming(r[j] + 2)
+                fprintf(fptr,"%d\n",poids_hamming(mpz_get_ui(r[j]))); 
+                mpz_add_ui(r[j], r[j], 2);
+                mpz_mod_ui(r[j],r[j],s[j]);
+            }
+        }
     }
 
     mpz_set(p, v);
     mpz_clear(v);
     free_liste(N, r);
+    fclose(fptr);
 }
 
 int main(int argc, char **argv)
@@ -80,7 +108,7 @@ int main(int argc, char **argv)
     unsigned int N = atoi(argv[2]);
     unsigned int t = atoi(argv[3]);
     char *ptrace = argv[4];
-    char *parametres = argv[4];
+    char *parametres = argv[5];
     // Initialisation des valeurs pour le crible
     mpz_t p;
     mpz_init(p);
