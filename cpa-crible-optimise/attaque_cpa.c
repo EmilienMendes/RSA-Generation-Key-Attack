@@ -1,8 +1,7 @@
 #include "attaque_cpa.h"
-
 /**
  * Affichage du tableau
- * @param v tableau affiche
+ * @param t tableau affiche
  */
 void afficher_tableau(Tableau v)
 {
@@ -11,8 +10,10 @@ void afficher_tableau(Tableau v)
     for (unsigned int i = 0; i < longeur; i++)
     {
         for (unsigned int j = 0; j < largeur; j++)
-            printf("[%d][%d] : %d\n", i, j, v.tab[i][j]);
+        printf("[%d][%d] : %d\n", i, j, v.tab[i][j]);
+        printf("\n");
     }
+    printf("\n");
 }
 
 /**
@@ -41,7 +42,6 @@ void free_tableau(Tableau t)
 // https://stackoverflow.com/questions/12733105/c-function-that-counts-lines-in-file
 int countlines(char *filename)
 {
-    // count the number of lines in the file called filename
     FILE *fp = fopen(filename, "r");
     int ch = 0;
     int lines = 0;
@@ -69,30 +69,26 @@ int countlines(char *filename)
  */
 Tableau recuperation_mesure(char *fichier, unsigned int lambda)
 {
-    /* TODO
-        Recuperation de n
-        n = taille du fichier / lambda
-     */
-    unsigned int n = countlines(fichier)/lambda;
-    printf("n : %d\n", n);
+    // n = taille du fichier / lambda
+    unsigned int n = countlines(fichier) / lambda;
+
+    FILE *fptr = fopen(fichier, "r");
 
     Tableau l;
     l.tab = (unsigned int **)malloc(sizeof(unsigned int *) * n);
     initialisation_tableau(l, n, lambda);
     l.x = n;
     l.y = lambda;
-
+    unsigned int valeur;
     for (unsigned int i = 0; i < n; i++)
     {
         for (unsigned int j = 0; j < lambda; j++)
         {
-            /* TODO
-                Recuperation des mesures
-                Ordonnencement des valeurs
-            */
-            l.tab[i][j] = i * lambda + j;
+            fscanf(fptr, "%u", &valeur);
+            l.tab[i][j] = valeur;
         }
     }
+    fclose(fptr);
     return l;
 }
 
@@ -115,33 +111,39 @@ unsigned int poids_hamming(unsigned int nombre)
 /**
  * @param m tableau des poids de hamming
  * @param l tableau de mesure
- * @param i index du tableau utilise
+ * @param j index du tableau utilise
+ * @param nb_trace nombre de trace utilise pour la CPA
  * @param lambda largeur du tableau
  * @return coefficient de correlation de Pearson entre m[i] et l[i] (de taille lambda)
  */
-float distingueur(Tableau m, Tableau l, int i, int lambda)
+float distingueur(Tableau m, Tableau l, unsigned int j, unsigned int nb_trace, unsigned int lambda)
 {
-    //
-    float moyenne_x, moyenne_y;
-    for (int j = 0; j < lambda; j++)
+    float moyenne_x = 0;
+    float moyenne_y = 0;
+
+    for (int i = 0; i < nb_trace; i++)
     {
         moyenne_x += m.tab[i][j];
         moyenne_y += l.tab[i][j];
     }
 
-    moyenne_x /= lambda;
-    moyenne_y /= lambda;
+    moyenne_x /= nb_trace;
+    moyenne_y /= nb_trace;
 
-    float correlation;
-    float denominateur = 0;
+    float somme_x_carre = 0;
+    float somme_y_carre = 0;
     float numerateur = 0;
 
-    for (int j = 0; j < lambda; j++)
+    for (int i = 0; i < nb_trace; i++)
     {
-        denominateur += (float)((m.tab[i][j] - moyenne_x) * (l.tab[i][j] - moyenne_y));
-        numerateur += sqrt(pow((m.tab[i][j] - moyenne_x), 2)) * sqrt(pow((l.tab[i][j] - moyenne_y), 2));
+        numerateur += (m.tab[i][j] - moyenne_x) * (l.tab[i][j] - moyenne_y);
+        somme_x_carre += (m.tab[i][j] - moyenne_x) * (m.tab[i][j] - moyenne_x);
+        somme_y_carre += (l.tab[i][j] - moyenne_y) * (l.tab[i][j] - moyenne_y);
     }
-    correlation = denominateur / numerateur;
+
+    float denominateur = sqrt(somme_x_carre * somme_y_carre);
+
+    float correlation = numerateur / denominateur;
     return correlation;
 }
 
@@ -152,12 +154,19 @@ float distingueur(Tableau m, Tableau l, int i, int lambda)
  */
 unsigned int argmax(float *liste, int taille_liste)
 {
-    int index_max = 0;
-    for (unsigned int i = 1; i < taille_liste; i++)
+    int index_max = 1;
+    for (unsigned int i = 2; i < taille_liste; i++)
     {
         if (liste[i] > liste[index_max])
             index_max = i;
     }
+    // for (int i = 2; i < taille_liste; i++)
+    // {
+    //     if(liste[i] == liste[index_max] && i != index_max){
+    //         printf("Correlation indentique de %.2f\n",liste[i]);
+    //     }
+    // }
+
     return index_max;
 }
 
@@ -194,19 +203,21 @@ void theoreme_reste_chinois(unsigned int *a, unsigned int *r, unsigned int lambd
  * Attaque pour recuperer le nombre premier lors de la generation RSA
  * @param lambda nombre de petit premiers
  * @param trace fichier contenant la trace d'execution du programme
- * @param p entier partiellement retrouve
  */
-void attaque_cpa(unsigned int lambda, char *trace, char *parametres, mpz_t p)
+void attaque_cpa(unsigned int lambda, char *trace, char *parametres)
 {
+    mpz_t p;
+    mpz_init(p);
+
     Tableau l = recuperation_mesure(trace, lambda);
     int n = l.x;
-
     unsigned int *s = generation_liste_nombres_premiers(lambda);
 
     Tableau m;
     m.tab = (unsigned int **)malloc(sizeof(unsigned int *) * n);
+    m.x = n;
+    m.y = lambda;
     initialisation_tableau(m, n, lambda);
-
     // Creation tableau de la taillle maximal (meme si tout le tableau n'est pas forcement utilise)
     float *score = (float *)malloc(sizeof(float) * s[lambda - 1]);
     unsigned int *candidat = (unsigned int *)malloc(sizeof(unsigned int) * lambda);
@@ -217,22 +228,52 @@ void attaque_cpa(unsigned int lambda, char *trace, char *parametres, mpz_t p)
         {
             for (unsigned int i = 0; i < n; i++)
             {
-                m.tab[i][j] = poids_hamming((h - (n - i - 1) * 2) % s[j]);
-                // Distingueur hors de la boucle ??
-                score[h] = distingueur(m, l, i, lambda);
+                int nombre = h - (n - i) * 2; // Marche uniquement pour  n - i ????
+                // On prend le nombre et on le fais devenir positif s'il ne l'etait pas deja
+                while (nombre < 0)
+                    nombre += s[j];
+                m.tab[i][j] = poids_hamming(nombre % s[j]);
             }
+            score[h] = distingueur(m, l, j, n, lambda);
         }
         candidat[j] = argmax(score, s[j]);
     }
 
-    printf("[");
-    for (int j = 0; j < lambda - 1; j++)
-        printf("%d,", candidat[j]);
-    printf("%d]\n", candidat[lambda - 1]);
-
     theoreme_reste_chinois(candidat, s, lambda, p);
 
+    FILE *fptr = fopen(parametres, "r");
+    mpz_t public_key, verification, prod_modulo;
+    /*
+    p % p' = s
+    p = s + k x p' (avec s le produit des modulos)
+    n  = p x q
+
+    n = (s + k x p') x q
+      = s x q + k x p' x q
+
+    Donc divise n % p' = s
+    */
+
+    mpz_init_set_ui(prod_modulo, 1);
+    for (int i = 0; i < lambda; i++)
+        mpz_mul_ui(prod_modulo, prod_modulo, s[i]);
+
+    mpz_inits(public_key, verification, NULL);
+    gmp_fscanf(fptr, "n = %Zd", public_key);
+    mpz_mod(public_key, public_key, p);
+
+    if (mpz_cmp(public_key, prod_modulo) != 0)
+    {
+        printf("Recuperation partiel de la cle \n");
+        gmp_printf("p' = %Zd\n", p);
+    }
+    else
+        gmp_printf("Erreur dans la valeur n mod s = %Zd !\n", public_key);
+
+    mpz_clears(public_key, verification, prod_modulo, p, NULL);
+
     free_tableau(l);
+    free_tableau(m);
     free(s);
     free(candidat);
     free(score);
@@ -246,12 +287,13 @@ int main(int argc, char **argv)
         printf("fichier1 : nom du fichier contenant la trace d'execution\nfichier2 : nom du fichier contenant les parametres RSA\n");
         return 1;
     }
+    
     unsigned int lambda = atoi(argv[1]);
     char *trace = argv[2];
     char *parametres = argv[3];
-    mpz_t p;
-    mpz_init(p);
-    attaque_cpa(lambda, trace, parametres, p);
-    mpz_clear(p);
+
+    srand(time(NULL));
+
+    attaque_cpa(lambda, trace, parametres);
     return 0;
 }

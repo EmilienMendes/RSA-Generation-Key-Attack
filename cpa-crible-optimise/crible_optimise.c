@@ -34,15 +34,16 @@ unsigned int poids_hamming(unsigned int nombre)
  * @param N nombre de petits premiers utilises pour le crible
  * @param t nombre de tours de Miller Rabin
  * @param p entier premier
- * @param s listes des N peits premiers
- * @param trace fichier qui contiendra la trace de l'execution du programme
- * @param parametres fichier qui contiendra les valeurs des entiers RSA (p,n)
+ * @param s listes des N petits premiers
+ * @param trace fichier qui contiendra la trace de l'execution du programme (laisser NULL pour ne pas stocker la trace)
  * @param generator generateur de nombre aleatoire
  */
-void generation_entier_crible_optimise(unsigned int k, unsigned int N, unsigned int t, mpz_t p, unsigned int *s, char *trace, char *parametres, gmp_randstate_t generator)
+void generation_entier_crible_optimise(unsigned int k, unsigned int N, unsigned int t, mpz_t p, unsigned int *s, char *trace, gmp_randstate_t generator)
 {
-    FILE *fptr = fopen(trace,"w");
-   
+    FILE *fptr;
+    if( trace != NULL)
+        fptr = fopen(trace, "w");
+
     mpz_t v;
     mpz_init(v);
     /*
@@ -60,7 +61,6 @@ void generation_entier_crible_optimise(unsigned int k, unsigned int N, unsigned 
         mpz_init(r[j]);
         mpz_mod_ui(r[j], v, s[j]);
     }
-
     unsigned int prime = mpz_probab_prime_p(v, t);
     while (!prime)
     {
@@ -68,28 +68,39 @@ void generation_entier_crible_optimise(unsigned int k, unsigned int N, unsigned 
         while (verification_entier_nul(r, N))
         {
             mpz_add_ui(v, v, 2);
-            for (unsigned int j = 0; j < N; j++){
-                // Peut etre poids hamming(r[j] + 2)
-                fprintf(fptr,"%d\n",poids_hamming(mpz_get_ui(r[j]))); 
+            for (unsigned int j = 0; j < N; j++)
+            {
+                if( trace != NULL)
+                    fprintf(fptr, "%d\n", poids_hamming(mpz_get_ui(r[j])));
                 mpz_add_ui(r[j], r[j], 2);
-                mpz_mod_ui(r[j],r[j],s[j]);
+                mpz_mod_ui(r[j], r[j], s[j]);
             }
         }
         // Test Miller Rabin
-        if ((prime = mpz_probab_prime_p(v, t)) == 0) {
+        if ((prime = mpz_probab_prime_p(v, t)) == 0)
+        {
             mpz_add_ui(v, v, 2);
-            for (unsigned int j = 0; j < N; j++){
-                // Peut etre poids hamming(r[j] + 2)
-                fprintf(fptr,"%d\n",poids_hamming(mpz_get_ui(r[j]))); 
+            for (unsigned int j = 0; j < N; j++)
+            {
+                if(trace != NULL)
+                    fprintf(fptr, "%d\n", poids_hamming(mpz_get_ui(r[j])));
                 mpz_add_ui(r[j], r[j], 2);
-                mpz_mod_ui(r[j],r[j],s[j]);
+                mpz_mod_ui(r[j], r[j], s[j]);
             }
         }
     }
-
     mpz_set(p, v);
     mpz_clear(v);
+   
     free_liste(N, r);
+    if(trace != NULL)
+        fclose(fptr);
+}
+
+void ecriture_parametre(char *fichier, mpz_t n)
+{
+    FILE *fptr = fopen(fichier, "w");
+    gmp_fprintf(fptr, "n = %Zd\n", n);
     fclose(fptr);
 }
 
@@ -99,7 +110,7 @@ int main(int argc, char **argv)
     {
         printf("Usage : %s <k> <N> <t> <fichier1> <fichier2> \n", argv[0]);
         printf("k : nombre de bits de l'entier premier\nN: nombre de petits premiers utilise pour le crible\nt: nombre de tours de Miller-Rabin\n");
-        printf("fichier1 : nom de fichier contenant la trace d'execution du programme\nfichier2: nom de fichier contenant les parametres n et p\n");
+        printf("fichier1 : nom de fichier contenant la trace d'execution du programme\nfichier2: nom de fichier contenant n\n");
         return 1;
     }
 
@@ -108,20 +119,24 @@ int main(int argc, char **argv)
     unsigned int N = atoi(argv[2]);
     unsigned int t = atoi(argv[3]);
     char *ptrace = argv[4];
-    char *parametres = argv[5];
+    char *parametre = argv[5];
     // Initialisation des valeurs pour le crible
-    mpz_t p;
-    mpz_init(p);
+    mpz_t p, q, n;
+    mpz_inits(p, q, n, NULL);
 
     unsigned int *r;
     r = generation_liste_nombres_premiers(N);
     // Generateur pseudo aleatoires
     gmp_randstate_t generator;
+    long int seed = time(NULL);
     gmp_randinit_default(generator);
-    gmp_randseed_ui(generator, time(NULL));
+    // printf("Seed : %ld\n",seed);
+    gmp_randseed_ui(generator, seed);
 
-    generation_entier_crible_optimise(k, N, t, p, r, ptrace, parametres, generator);
+    generation_entier_crible_optimise(k, N, t, p, r, ptrace, generator);
+    generation_entier_crible_optimise(k, N, t, q, r, NULL, generator);
+    ecriture_parametre(parametre, n);
+    mpz_clears(p, q, n, NULL);
 
-    mpz_clear(p);
     return 0;
 }

@@ -7,6 +7,6 @@
 #include <time.h>
 
 unsigned int verification_entier_nul(mpz_t *liste, unsigned int taille);
-void generation_entier_crible_optimise(unsigned int k, unsigned int N, unsigned int t, mpz_t p, unsigned int *s, char *trace, char *parametres, gmp_randstate_t generator);
+void generation_entier_crible_optimise(unsigned int k, unsigned int N, unsigned int t, mpz_t p, unsigned int *s, char *trace, gmp_randstate_t generator);
 
 #endif
