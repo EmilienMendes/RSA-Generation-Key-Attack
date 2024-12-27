@@ -1,6 +1,17 @@
 #include "crible_simple.h"
 #include "attaque_spa.h"
 
+/**
+ * Generation de la trace SPA
+ * @param k nombre de bits de l'entier
+ * @param N nombre d'elements du crible
+ * @param t nombre de tours de Miller Rabin
+ * @param r liste des petits premiers
+ * @param fichier_trace_p fichier stockant la trace de courant de p
+ * @param fichier_trace_q fichier stockant la trace de courant de q
+ * @param fichier_parametres fichier stockant les elements constituant la cle 
+ * @param generator generateur aleatoire
+ */
 void acquisition_trace_spa(unsigned int k, unsigned int N, unsigned int t, unsigned int *r, char *fichier_trace_p, char *fichier_trace_q, char *fichier_parametres, gmp_randstate_t generator)
 {
     // Initialisation des valeurs pour le crible
@@ -20,12 +31,23 @@ void acquisition_trace_spa(unsigned int k, unsigned int N, unsigned int t, unsig
     mpz_clears(p, q, n, NULL);
 }
 
+/**
+ * Exemple generique de l'attaque avec les etapes d'acquistion et d'attaque des traces
+ * @param k nombre de bits de l'entier
+ * @param N nombre d'elements du crible
+ * @param t nombre de tours de Miller Rabin
+ * @param r liste des petits premiers
+ * @param fichier_trace_p fichier stockant la trace de courant de p
+ * @param fichier_trace_q fichier stockant la trace de courant de q
+ * @param fichier_parametres fichier stockant les elements constituant la cle 
+ * @param generator generateur aleatoire
+ */
 void exemple_attaque_spa(unsigned int k, unsigned int N, unsigned int t, char *fichier_trace_p, char *fichier_trace_q, char *fichier_parametres, gmp_randstate_t generator)
 {
     // Generation des petits premiers
     unsigned int *r = generation_liste_nombres_premiers(N);
 
-    // Acquistion de la trace pour faire l'attaque
+    // Acquisition de la trace pour faire l'attaque
     acquisition_trace_spa(k, N, t, r, fichier_trace_p, fichier_trace_q, fichier_parametres, generator);
 
     // Attaque spa
@@ -36,23 +58,15 @@ void exemple_attaque_spa(unsigned int k, unsigned int N, unsigned int t, char *f
     mpz_inits(n, p, q, s, cp, cq, NULL);
     recuperer_parametres(fichier_parametres, n, p, q);
 
-    unsigned int ptaille_liste = 0;
-    unsigned int qtaille_liste = 0;
+    unsigned int taille_liste_p = 0;
+    unsigned int taille_liste_q = 0;
 
-    Liste_Diviseur *pliste = recuperer_diviseur(N, fichier_trace_p, &ptaille_liste, &m1);
-    Liste_Diviseur *qliste = recuperer_diviseur(N, fichier_trace_q, &qtaille_liste, &m2);
+    Liste_Diviseur *liste_p = recuperer_diviseur_unique(N, fichier_trace_p, &taille_liste_p, &m1);
+    Liste_Diviseur *liste_q = recuperer_diviseur_unique(N, fichier_trace_q, &taille_liste_q, &m2);
 
+    unsigned int attaque_possible = attaque_spa(liste_p, liste_q, taille_liste_p, taille_liste_q, s, cp, cq, m1, m2, k, n);
 
-    unsigned int ptaille_liste_sans_doublon = 0;
-    unsigned int qtaille_liste_sans_doublon = 0;
-
-    Liste_Diviseur *pliste_sans_doublon = enlever_doublon(pliste, ptaille_liste, &ptaille_liste_sans_doublon);
-    Liste_Diviseur *qliste_sans_doublon = enlever_doublon(qliste, qtaille_liste, &qtaille_liste_sans_doublon);
-
-    // afficher_liste(pliste_sans_doublon, ptaille_liste_sans_doublon);
-    //  afficher_liste(qliste_sans_doublon, qtaille_liste_sans_doublon);
-    unsigned int attaque_possible = attaque_spa(pliste_sans_doublon, qliste_sans_doublon, ptaille_liste_sans_doublon, qtaille_liste_sans_doublon, s, cp, cq, m1, m2, k, n);
-
+    // TODO Faire une verification sans "tricher" en utilisant les valeurs de p et q (non obtenables normalement)
     // Verification avec les vrais valeurs de p et de q
     if (!verification(p, s, cp))
         printf("Erreur dans la valeur de cp\n");
@@ -72,11 +86,9 @@ void exemple_attaque_spa(unsigned int k, unsigned int N, unsigned int t, char *f
     }
 
     mpz_clears(n, p, q, s, cp, cq, NULL);
-    free(pliste);
-    free(qliste);
-    free(pliste_sans_doublon);
-    free(qliste_sans_doublon);
-
+    free(liste_p);
+    free(liste_q);
+    
 }
 
 int main(int argc, char **argv)

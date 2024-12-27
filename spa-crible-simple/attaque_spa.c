@@ -99,6 +99,9 @@ Liste_Diviseur *recuperer_diviseur(unsigned int N, char *fichier, unsigned int *
     return liste;
 }
 
+
+
+
 /**
  * Suppression de tous les elements en double dans la liste des diviseurs pour pouvoir faire le theoreme des restes chinois
  * @param liste listes de tous les diviseurs avec des doublons
@@ -149,6 +152,17 @@ Liste_Diviseur *enlever_doublon(Liste_Diviseur *liste, unsigned int taille_liste
         nb_diviseur_unique++;
     }
 
+    return liste_sans_doublon;
+}
+
+/**
+ TODO Ajouter description
+ */
+Liste_Diviseur *recuperer_diviseur_unique(unsigned int N,char *fichier,unsigned int *taille_liste,unsigned int *m){
+    unsigned int taille_liste_doublon = 0;
+    Liste_Diviseur *liste  = recuperer_diviseur(N,fichier,&taille_liste_doublon,m);
+    Liste_Diviseur *liste_sans_doublon = enlever_doublon(liste,taille_liste_doublon,taille_liste);
+    free(liste);
     return liste_sans_doublon;
 }
 

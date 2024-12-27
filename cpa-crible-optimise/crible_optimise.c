@@ -12,9 +12,9 @@ unsigned int verification_entier_nul(mpz_t *liste, unsigned int taille)
 
 
 
-/* 
-TODO Verifier que l'entier est bien de k bits
- */
+
+// TODO Verifier que l'entier est bien de k bits
+ 
 /**
  * Genere un entier avec la methode du crible optimise
  * @param k taille de l'entier souhaite

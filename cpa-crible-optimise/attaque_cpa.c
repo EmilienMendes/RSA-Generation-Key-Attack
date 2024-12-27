@@ -229,6 +229,7 @@ unsigned int attaque_cpa(unsigned int lambda,unsigned int *s, char *trace, char 
 
     FILE *fptr = fopen(parametres, "r");
     mpz_t public_key, verification, prod_modulo;
+    // TODO Verifier que l'equation est vrai
     /*
     p % p' = s
     p = s + k x p' (avec s le produit des modulos)

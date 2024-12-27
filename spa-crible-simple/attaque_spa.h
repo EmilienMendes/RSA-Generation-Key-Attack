@@ -14,6 +14,8 @@ void recuperer_parametres(char *fichier, mpz_t n, mpz_t p, mpz_t q);
 // Operations sur les j et r
 Liste_Diviseur *recuperer_diviseur(unsigned int N, char *fichier, unsigned int *taille_liste, unsigned int *m);
 Liste_Diviseur *enlever_doublon(Liste_Diviseur *liste, unsigned int taille_liste, unsigned int *taille_sans_doublon);
+Liste_Diviseur *recuperer_diviseur_unique(unsigned int N,char *fichier,unsigned int *taille_liste,unsigned int *m);
+
 
 // Operations pour recuperer les valeurs ap,bp,cp aq,bq,cq
 void calcul_produit(mpz_t s, Liste_Diviseur *liste, unsigned int taille_liste);
