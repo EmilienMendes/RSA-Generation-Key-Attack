@@ -3,6 +3,7 @@
 
 #include "../generation-nombre-premier/generation_premier.h"
 #include "constante.h"
+#include "hamming.h"
 #include "gauss.h"
 #include <stdlib.h>
 #include <stdio.h>
@@ -13,11 +14,10 @@ void initialisation_tableau(Tableau t, unsigned int longeur, unsigned int largeu
 void free_tableau(Tableau t);
 
 Tableau recuperation_mesure(char *fichier, unsigned int lambda);
-unsigned int poids_hamming(unsigned int nombre);
 float distingueur(Tableau m, Tableau l, unsigned int i, unsigned int nb_trace, unsigned int lambda);
 unsigned int argmax(float *liste, int taille_liste);
 void theoreme_reste_chinois(unsigned int *a, unsigned int *r, unsigned int lambda, mpz_t x);
 
-void attaque_cpa(unsigned int lambda, char *trace, char *parametres);
+unsigned int attaque_cpa(unsigned int lambda, unsigned int *s,char *trace, char *parametres);
 
 #endif

@@ -10,7 +10,7 @@ void afficher_tableau(Tableau v)
     for (unsigned int i = 0; i < longeur; i++)
     {
         for (unsigned int j = 0; j < largeur; j++)
-        printf("[%d][%d] : %d\n", i, j, v.tab[i][j]);
+            printf("[%d][%d] : %d\n", i, j, v.tab[i][j]);
         printf("\n");
     }
     printf("\n");
@@ -92,21 +92,6 @@ Tableau recuperation_mesure(char *fichier, unsigned int lambda)
     return l;
 }
 
-/**
- * @param nombre entier dont on souhaite determiner son poids de Hamming
- * @return nombre de 1 dans le nombre
- */
-unsigned int poids_hamming(unsigned int nombre)
-{
-    unsigned int taille_entier = sizeof(unsigned int) * 8;
-    unsigned int poids_hamming = 0;
-    for (int i = 0; i < taille_entier; i++)
-    {
-        poids_hamming += (nombre & 1);
-        nombre = nombre >> 1;
-    }
-    return poids_hamming;
-}
 
 /**
  * @param m tableau des poids de hamming
@@ -202,16 +187,17 @@ void theoreme_reste_chinois(unsigned int *a, unsigned int *r, unsigned int lambd
 /**
  * Attaque pour recuperer le nombre premier lors de la generation RSA
  * @param lambda nombre de petit premiers
+ * @param s liste des petits premiers
  * @param trace fichier contenant la trace d'execution du programme
+ * @return 1 si l'attaque reussi et 0 sinon
  */
-void attaque_cpa(unsigned int lambda, char *trace, char *parametres)
+unsigned int attaque_cpa(unsigned int lambda,unsigned int *s, char *trace, char *parametres)
 {
     mpz_t p;
     mpz_init(p);
 
     Tableau l = recuperation_mesure(trace, lambda);
     int n = l.x;
-    unsigned int *s = generation_liste_nombres_premiers(lambda);
 
     Tableau m;
     m.tab = (unsigned int **)malloc(sizeof(unsigned int *) * n);
@@ -262,14 +248,18 @@ void attaque_cpa(unsigned int lambda, char *trace, char *parametres)
     gmp_fscanf(fptr, "n = %Zd", public_key);
     mpz_mod(public_key, public_key, p);
 
+    unsigned int valeur_retour;
     if (mpz_cmp(public_key, prod_modulo) != 0)
     {
         printf("Recuperation partiel de la cle \n");
         gmp_printf("p' = %Zd\n", p);
+        valeur_retour = 1;
     }
     else
+    {
         gmp_printf("Erreur dans la valeur n mod s = %Zd !\n", public_key);
-
+        valeur_retour = 0;
+    }
     mpz_clears(public_key, verification, prod_modulo, p, NULL);
 
     free_tableau(l);
@@ -277,23 +267,5 @@ void attaque_cpa(unsigned int lambda, char *trace, char *parametres)
     free(s);
     free(candidat);
     free(score);
-}
-
-int main(int argc, char **argv)
-{
-    if (argc != 4)
-    {
-        printf("Usage : %s <lambda> <fichier1> <fichier2> \nlambda: nombre de petits premiers utilise pour le crible optimise\n", argv[0]);
-        printf("fichier1 : nom du fichier contenant la trace d'execution\nfichier2 : nom du fichier contenant les parametres RSA\n");
-        return 1;
-    }
-    
-    unsigned int lambda = atoi(argv[1]);
-    char *trace = argv[2];
-    char *parametres = argv[3];
-
-    srand(time(NULL));
-
-    attaque_cpa(lambda, trace, parametres);
-    return 0;
+    return valeur_retour;
 }
