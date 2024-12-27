@@ -10,10 +10,10 @@ parametres := parametres.txt
 
 
 compilation : main.c crible_simple.c  attaque_spa.c ${fichier_gen_premier}
-	$(CC) -Wall -o main ${fichier_gen_premier} crible_simple.c attaque_spa.c -lgmp
+	$(CC) -Wall -o main main.c ${fichier_gen_premier} crible_simple.c attaque_spa.c -lgmp
 
 attaque_spa : compilation 
-	./main ${N} ${k} ${ptrace} ${qtrace} ${parametres}
+	./main  ${k} ${N} ${t} ${ptrace} ${qtrace} ${parametres}
 
 clean :
 	rm -f main ${ptrace} ${qtrace} ${parametres}
