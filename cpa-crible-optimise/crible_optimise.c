@@ -10,11 +10,8 @@ unsigned int verification_entier_nul(mpz_t *liste, unsigned int taille)
     return FALSE;
 }
 
+// TODO Verifier que l'entier est bien de k bits et l'ouverture reglementaire des fichiers
 
-
-
-// TODO Verifier que l'entier est bien de k bits
- 
 /**
  * Genere un entier avec la methode du crible optimise
  * @param k taille de l'entier souhaite
@@ -22,13 +19,14 @@ unsigned int verification_entier_nul(mpz_t *liste, unsigned int taille)
  * @param t nombre de tours de Miller Rabin
  * @param p entier premier
  * @param s listes des N petits premiers
- * @param trace fichier qui contiendra la trace de l'execution du programme (laisser NULL pour ne pas stocker la trace)
+ * @param sigma ecart type du bruit lors de l'acquisition de trace
+ * @param trace fichier qui contiendra la trace de l'execution du programme (NULL pour ne pas stocker la trace)
  * @param generator generateur de nombre aleatoire
  */
-void generation_entier_crible_optimise(unsigned int k, unsigned int N, unsigned int t, mpz_t p, unsigned int *s, char *trace, gmp_randstate_t generator)
+void generation_entier_crible_optimise(unsigned int k, unsigned int N, unsigned int t, mpz_t p, unsigned int *s, int sigma, char *trace, gmp_randstate_t generator)
 {
     FILE *fptr;
-    if( trace != NULL)
+    if (trace != NULL)
         fptr = fopen(trace, "w");
 
     mpz_t v;
@@ -40,7 +38,6 @@ void generation_entier_crible_optimise(unsigned int k, unsigned int N, unsigned 
     mpz_urandomb(v, generator, k);
     mpz_setbit(v, k - 1);
     mpz_setbit(v, 0);
-
     mpz_t *r = (mpz_t *)malloc(N * sizeof(mpz_t));
     // R[j] <- v0 mod sj
     for (unsigned int j = 0; j < N; j++)
@@ -49,6 +46,7 @@ void generation_entier_crible_optimise(unsigned int k, unsigned int N, unsigned 
         mpz_mod_ui(r[j], v, s[j]);
     }
     unsigned int prime = mpz_probab_prime_p(v, t);
+
     while (!prime)
     {
         // Verification avec les reste modulaires
@@ -57,8 +55,11 @@ void generation_entier_crible_optimise(unsigned int k, unsigned int N, unsigned 
             mpz_add_ui(v, v, 2);
             for (unsigned int j = 0; j < N; j++)
             {
-                if( trace != NULL)
+                if (trace != NULL)
+                {
+                    // int bruit = (int) gauss(sigma);
                     fprintf(fptr, "%d\n", poids_hamming(mpz_get_ui(r[j])));
+                }
                 mpz_add_ui(r[j], r[j], 2);
                 mpz_mod_ui(r[j], r[j], s[j]);
             }
@@ -69,8 +70,11 @@ void generation_entier_crible_optimise(unsigned int k, unsigned int N, unsigned 
             mpz_add_ui(v, v, 2);
             for (unsigned int j = 0; j < N; j++)
             {
-                if(trace != NULL)
+                if (trace != NULL){
+                    // int bruit = (int) gauss(sigma);
                     fprintf(fptr, "%d\n", poids_hamming(mpz_get_ui(r[j])));
+                }
+
                 mpz_add_ui(r[j], r[j], 2);
                 mpz_mod_ui(r[j], r[j], s[j]);
             }
@@ -78,15 +82,15 @@ void generation_entier_crible_optimise(unsigned int k, unsigned int N, unsigned 
     }
     mpz_set(p, v);
     mpz_clear(v);
-   
     free_liste(N, r);
-    if(trace != NULL)
+    if (trace != NULL)
         fclose(fptr);
 }
 
-void ecriture_parametre(char *fichier, mpz_t n)
+void ecriture_parametre(char *fichier, mpz_t n, mpz_t p)
 {
     FILE *fptr = fopen(fichier, "w");
     gmp_fprintf(fptr, "n = %Zd\n", n);
+    gmp_fprintf(fptr, "p = %Zd\n", p);
     fclose(fptr);
 }

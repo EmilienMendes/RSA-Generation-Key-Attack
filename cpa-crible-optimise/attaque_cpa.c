@@ -228,7 +228,7 @@ unsigned int attaque_cpa(unsigned int lambda,unsigned int *s, char *trace, char 
     theoreme_reste_chinois(candidat, s, lambda, p);
 
     FILE *fptr = fopen(parametres, "r");
-    mpz_t public_key, verification, prod_modulo;
+    mpz_t public_key,private_key,tmp, verification, prod_modulo;
     // TODO Verifier que l'equation est vrai
     /*
     p % p' = s
@@ -244,13 +244,13 @@ unsigned int attaque_cpa(unsigned int lambda,unsigned int *s, char *trace, char 
     mpz_init_set_ui(prod_modulo, 1);
     for (int i = 0; i < lambda; i++)
         mpz_mul_ui(prod_modulo, prod_modulo, s[i]);
-
-    mpz_inits(public_key, verification, NULL);
-    gmp_fscanf(fptr, "n = %Zd", public_key);
+    // s = 1062411448280052319722448549835623701226301211611796930357321893850294264731624591303255041960530
+    mpz_inits(public_key, verification,private_key,tmp, NULL);
+    gmp_fscanf(fptr, "n = %Zd\n", public_key);
+    gmp_fscanf(fptr, "p = %Zd", private_key);
     mpz_mod(public_key, public_key, p);
-
     unsigned int valeur_retour;
-    if (mpz_cmp(public_key, prod_modulo) != 0)
+    if (mpz_cmp(public_key, prod_modulo) == 0)
     {
         printf("Recuperation partiel de la cle \n");
         gmp_printf("p' = %Zd\n", p);
@@ -258,15 +258,18 @@ unsigned int attaque_cpa(unsigned int lambda,unsigned int *s, char *trace, char 
     }
     else
     {
-        gmp_printf("Erreur dans la valeur n mod s = %Zd !\n", public_key);
+        // gmp_printf("Erreur dans la valeur n mod p' = %Zd !\n", public_key);
+        mpz_mod(tmp,private_key,p);
+        gmp_printf("p = %Zd \np' = %Zd\n",private_key,p);
+        gmp_printf("p %% p' = %Zd\n",tmp);
         valeur_retour = 0;
     }
-    mpz_clears(public_key, verification, prod_modulo, p, NULL);
+    mpz_clears(public_key,private_key, tmp,verification, prod_modulo, p, NULL);
 
     free_tableau(l);
     free_tableau(m);
-    free(s);
     free(candidat);
     free(score);
+    fclose(fptr);
     return valeur_retour;
 }
