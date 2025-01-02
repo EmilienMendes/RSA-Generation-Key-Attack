@@ -7,10 +7,10 @@ compilation :
 	$(MAKE) -C cpa-crible-optimise compilation_spa
 
 spa : 
-	$(MAKE) -C spa-crible-simple attaque_spa
+	$(MAKE) -C spa-crible-simple spa
 
 cpa : 
-	$(MAKE) -C cpa-crible-optimise attaque_cpa
+	$(MAKE) -C cpa-crible-optimise cpa
 
 
 clean :

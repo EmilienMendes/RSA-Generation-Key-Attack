@@ -55,37 +55,25 @@ Il y a deux étapes à effectuer pour faire l'attaque
 - Créer les nombres premiers p et q et générer leur trace associé
 - Attaquer les deux traces pour retrouver c<sub>p</sub> et c<sub>q</sub>
 
-1. Générer les traces
-```bash 
-make acquisition_trace_spa
-```
-2. Attaquer les traces
-```bash 
-make attaque_spa
-```
-Une autre alternative pour faire les deux étapes en une seul fois
+Un fichier main est disponible et effectue les deux tâches au même momment.
+Il est possible de faire appel à chacune des fonctions indépendemment.
+
 ``` bash
 make spa
 ```
 #### CPA
 On suit les mêmes étapes que pour la SPA
-- Créer le nombres premie p et générer sa trace 
+- Créer le nombres premiers p et générer sa trace 
 - Attaquer cette trace
 
-1. Générer la trace
-```bash 
-make acquisition_trace_cpa
-```
-2. Attaquer la trace
-```bash 
-make attaque_cpa
-```
-Une autre alternative pour faire les deux étapes en une seul fois
 ``` bash
 make cpa
 ```
 
-Mesure : l(i,j) = a * poids_hamming(wi) + b 
-avec  a = 1 et b = gaussienne avec esperance = 0 et sigma $\in$ [0.5,3];
+Mesure :
+ 
+l(i,j) = a * poids_hamming(wi) + b  avec  a = 1 et b = gaussienne avec esperance = 0 et sigma $\in$ [0.5,3];
+
 Faire avec différents niveaux de bruits
+
 Faire les mesures avec plusieurs générations de premiers (proba de succès)

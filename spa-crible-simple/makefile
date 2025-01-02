@@ -1,4 +1,4 @@
-all : attaque_spa 
+all : spa 
 
 fichier_gen_premier := ../generation-nombre-premier/generation_premier.c
 k := 512
@@ -12,7 +12,7 @@ parametres := parametres.txt
 compilation : main.c crible_simple.c  attaque_spa.c ${fichier_gen_premier}
 	$(CC) -Wall -o main main.c ${fichier_gen_premier} crible_simple.c attaque_spa.c -lgmp
 
-attaque_spa : compilation 
+spa : compilation 
 	./main  ${k} ${N} ${t} ${ptrace} ${qtrace} ${parametres}
 
 clean :
