@@ -16,7 +16,7 @@ void acquisition_trace_cpa(unsigned int k, unsigned int lambda, unsigned int t, 
     generation_entier_crible_optimise(k, lambda, t, p, s, bruit, fichier_trace, generator);
     generation_entier_crible_optimise(k, lambda, t, q, s, bruit, NULL, generator);
     mpz_mul(n, p, q);
-    ecriture_parametre(fichier_parametre, n,p);
+    ecriture_parametre(fichier_parametre, n, p);
     mpz_clears(p, q, n, NULL);
 }
 
@@ -56,14 +56,14 @@ int main(int argc, char **argv)
     unsigned int *s = generation_liste_nombres_premiers(lambda);
 
     unsigned int nb_attaque_reussi = 0;
-    unsigned int nb_attaque = 1;
+    unsigned int nb_attaque = 100;
     for (unsigned int i = 0; i < nb_attaque; i++)
     {
-        // printf("Attaque %d \n", i);
+        // if( !(i%50))
+        printf("Attaque %d \n", i + 1);
         nb_attaque_reussi += exemple_attaque_cpa_horizontal(k, lambda, t, s, bruit, fichier_trace, fichier_cle, generator);
     }
-
-    float pourcentage_reussite = (nb_attaque_reussi / nb_attaque) * 100;
+    float pourcentage_reussite = ((float)nb_attaque_reussi / (float)nb_attaque) * 100.0f;
     printf("Succes de l'attaque %.1f %% \n", pourcentage_reussite);
 
     return 0;

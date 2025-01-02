@@ -92,7 +92,6 @@ Tableau recuperation_mesure(char *fichier, unsigned int lambda)
     return l;
 }
 
-
 /**
  * @param m tableau des poids de hamming
  * @param l tableau de mesure
@@ -191,7 +190,7 @@ void theoreme_reste_chinois(unsigned int *a, unsigned int *r, unsigned int lambd
  * @param trace fichier contenant la trace d'execution du programme
  * @return 1 si l'attaque reussi et 0 sinon
  */
-unsigned int attaque_cpa(unsigned int lambda,unsigned int *s, char *trace, char *parametres)
+unsigned int attaque_cpa(unsigned int lambda, unsigned int *s, char *trace, char *parametres)
 {
     mpz_t p;
     mpz_init(p);
@@ -228,43 +227,55 @@ unsigned int attaque_cpa(unsigned int lambda,unsigned int *s, char *trace, char 
     theoreme_reste_chinois(candidat, s, lambda, p);
 
     FILE *fptr = fopen(parametres, "r");
-    mpz_t public_key,private_key,tmp, verification, prod_modulo;
+    mpz_t public_key, private_key, verification, prod_modulo;
     // TODO Verifier que l'equation est vrai
     /*
-    p % p' = s
-    p = s + k x p' (avec s le produit des modulos)
+    p = p' mod s (avec s le produit des modulos)
+    p = p' + k x s
+
     n  = p x q
+    n = (p' + k x s) x q
+      = p' x q + k x s x q
 
-    n = (s + k x p') x q
-      = s x q + k x p' x q
+    n = p' x q mod s
+    Donc p' divise n mod s
+    Le resultat me parait coherent mais ca ne fonctionne pas 
 
-    Donc divise n % p' = s
+    Pour l'instant on verifie juste que
+    p % s = p'
     */
 
+    // Calcul de s
     mpz_init_set_ui(prod_modulo, 1);
     for (int i = 0; i < lambda; i++)
         mpz_mul_ui(prod_modulo, prod_modulo, s[i]);
-    // s = 1062411448280052319722448549835623701226301211611796930357321893850294264731624591303255041960530
-    mpz_inits(public_key, verification,private_key,tmp, NULL);
+
+    mpz_inits(public_key, private_key, verification, NULL);
+
+    // Recuperation de n, p
     gmp_fscanf(fptr, "n = %Zd\n", public_key);
     gmp_fscanf(fptr, "p = %Zd", private_key);
-    mpz_mod(public_key, public_key, p);
+
+    // Recuperation de n mod s
+    mpz_mod(public_key, public_key, prod_modulo);
+
+    // verif = p % s
+    mpz_mod(verification, private_key, prod_modulo);
+
     unsigned int valeur_retour;
-    if (mpz_cmp(public_key, prod_modulo) == 0)
+    
+    // Verification que p % s = p'
+    if (mpz_cmp(verification, p) == 0)
     {
-        printf("Recuperation partiel de la cle \n");
-        gmp_printf("p' = %Zd\n", p);
+        // Verification que p' divise n mod s
+        if(mpz_divisible_p(public_key,p) != 0)
+            printf("Les deux methodes sont equivalentes !!\n");
         valeur_retour = 1;
     }
     else
-    {
-        // gmp_printf("Erreur dans la valeur n mod p' = %Zd !\n", public_key);
-        mpz_mod(tmp,private_key,p);
-        gmp_printf("p = %Zd \np' = %Zd\n",private_key,p);
-        gmp_printf("p %% p' = %Zd\n",tmp);
         valeur_retour = 0;
-    }
-    mpz_clears(public_key,private_key, tmp,verification, prod_modulo, p, NULL);
+
+    mpz_clears(public_key, private_key, verification, prod_modulo, p, NULL);
 
     free_tableau(l);
     free_tableau(m);
