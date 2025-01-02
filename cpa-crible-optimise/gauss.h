@@ -3,5 +3,5 @@
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
-double gauss(void);
+double gauss(double sigma);
 #endif

@@ -16,5 +16,11 @@ attaque_cpa : compilation_cpa
 	./main ${k} ${N} ${t} ${ptrace} ${parametres}
 
 
+compil_test_gauss : test_gauss.c gauss.c
+	$(CC) -Wall -o test_gauss test_gauss.c  gauss.c -lm
+
+test_gauss : compil_test_gauss
+	./test_gauss
+
 clean :
-	rm -f main ${ptrace} ${parametres}
+	rm -f main ${ptrace} ${parametres} test_gauss
