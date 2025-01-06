@@ -46,7 +46,6 @@ void generation_entier_crible_optimise(unsigned int k, unsigned int N, unsigned 
         mpz_mod_ui(r[j], v, s[j]);
     }
     unsigned int prime = mpz_probab_prime_p(v, t);
-
     while (!prime)
     {
         // Verification avec les reste modulaires
@@ -70,7 +69,8 @@ void generation_entier_crible_optimise(unsigned int k, unsigned int N, unsigned 
             mpz_add_ui(v, v, 2);
             for (unsigned int j = 0; j < N; j++)
             {
-                if (trace != NULL){
+                if (trace != NULL)
+                {
                     // int bruit = (int) gauss(sigma);
                     fprintf(fptr, "%d\n", poids_hamming(mpz_get_ui(r[j])));
                 }
@@ -80,10 +80,27 @@ void generation_entier_crible_optimise(unsigned int k, unsigned int N, unsigned 
             }
         }
     }
+    /*
+    if (trace != NULL)
+    {
+        printf("Reste reel :\n");
+        mpz_t tmp;
+        mpz_init(tmp);
+        for (int i = 0; i < N; i++)
+        {
+            mpz_mod_ui(tmp, v, s[i]);
+            gmp_printf("%Zd ", tmp);
+        }
+
+        printf("\n");
+        mpz_clear(tmp);
+    }
+    */
     mpz_set(p, v);
     mpz_clear(v);
     free_liste(N, r);
     if (trace != NULL)
+
         fclose(fptr);
 }
 

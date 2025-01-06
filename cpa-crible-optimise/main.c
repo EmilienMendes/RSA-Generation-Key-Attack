@@ -41,6 +41,8 @@ int main(int argc, char **argv)
     }
     // Generateurs aleatoires
     long int seed = time(NULL);
+
+    // printf("Seed %ld\n",seed);  
     srand(seed);
     gmp_randstate_t generator;
     gmp_randinit_default(generator);
@@ -59,10 +61,15 @@ int main(int argc, char **argv)
     unsigned int nb_attaque = 100;
     for (unsigned int i = 0; i < nb_attaque; i++)
     {
-        // if( !(i%50))
-        printf("Attaque %d \n", i + 1);
+        if( !(i%10))
+            printf("Attaque %d \n", i);
         nb_attaque_reussi += exemple_attaque_cpa_horizontal(k, lambda, t, s, bruit, fichier_trace, fichier_cle, generator);
     }
+    // if (nb_attaque_reussi)
+    //     printf("Reussi\n");
+    // else
+    //     printf("Echoue\n");
+
     float pourcentage_reussite = ((float)nb_attaque_reussi / (float)nb_attaque) * 100.0f;
     printf("Succes de l'attaque %.1f %% \n", pourcentage_reussite);
 

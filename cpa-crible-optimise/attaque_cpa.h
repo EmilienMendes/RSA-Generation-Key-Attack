@@ -15,7 +15,7 @@ void free_tableau(Tableau t);
 
 Tableau recuperation_mesure(char *fichier, unsigned int lambda);
 float distingueur(Tableau m, Tableau l, unsigned int i, unsigned int nb_trace, unsigned int lambda);
-unsigned int argmax(float *liste, int taille_liste);
+Liste argmax(float *liste, int taille_liste);
 void theoreme_reste_chinois(unsigned int *a, unsigned int *r, unsigned int lambda, mpz_t x);
 
 unsigned int attaque_cpa(unsigned int lambda, unsigned int *s,char *trace, char *parametres);

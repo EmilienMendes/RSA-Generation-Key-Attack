@@ -127,16 +127,23 @@ float distingueur(Tableau m, Tableau l, unsigned int j, unsigned int nb_trace, u
 
     float denominateur = sqrt(somme_x_carre * somme_y_carre);
 
-    float correlation = numerateur / denominateur;
+    float correlation;
+    // Si jamais une des variables est constante, pour eviter de diviser par 0
+    if (numerateur == 0.f && denominateur == 0.f)
+        return 1;
+
+    else
+        correlation = numerateur / denominateur;
+
     return correlation;
 }
 
 /**
  * @param liste elements a considerer
  * @param taille_liste taille de la liste a considerer
- * @return la valeur maximal du tableau
+ * @return la liste des elements ayant la valeur maximal
  */
-unsigned int argmax(float *liste, int taille_liste)
+Liste argmax(float *liste, int taille_liste)
 {
     int index_max = 1;
     for (unsigned int i = 2; i < taille_liste; i++)
@@ -144,14 +151,30 @@ unsigned int argmax(float *liste, int taille_liste)
         if (liste[i] > liste[index_max])
             index_max = i;
     }
-    // for (int i = 2; i < taille_liste; i++)
-    // {
-    //     if(liste[i] == liste[index_max] && i != index_max){
-    //         printf("Correlation indentique de %.2f\n",liste[i]);
-    //     }
-    // }
 
-    return index_max;
+    // Compte le nombre d'element avec la meme correlation
+    unsigned int nb_element = 0;
+    for (unsigned int i = 1; i < taille_liste; i++)
+    {
+        if (liste[i] == liste[index_max])
+            nb_element++;
+    }
+    // Cree la liste avec les elements qui ont la valeur max
+    Liste liste_valeur_max;
+    liste_valeur_max.l = (unsigned int *)malloc(sizeof(unsigned int) * nb_element);
+    liste_valeur_max.taille = nb_element;
+
+    unsigned j = 0;
+    for (unsigned int i = 1; i < taille_liste; i++)
+    {
+        if (liste[i] == liste[index_max])
+        {
+            liste_valeur_max.l[j] = i;
+            j++;
+        }
+    }
+
+    return liste_valeur_max;
 }
 
 /**
@@ -162,6 +185,7 @@ unsigned int argmax(float *liste, int taille_liste)
  */
 void theoreme_reste_chinois(unsigned int *a, unsigned int *r, unsigned int lambda, mpz_t x)
 {
+    mpz_set_ui(x, 0);
     mpz_t Mi, yi, ri, produit_modulo;
     mpz_inits(Mi, yi, ri, NULL);
 
@@ -184,6 +208,98 @@ void theoreme_reste_chinois(unsigned int *a, unsigned int *r, unsigned int lambd
 }
 
 /**
+ * Verification que la cle partiel retrouve est correct
+ * @param n cle publique
+ * @param p cle prive
+ * @param p_prime cle partiel a tester
+ * @param s produit des premiers utilise dans le theoreme des restes chinois
+ * @return Vrai si la cle partiel, Faux sinon
+ */
+unsigned int verification_cle(mpz_t n, mpz_t p, mpz_t p_prime, mpz_t s)
+{
+
+    unsigned int cle_correct = FALSE;
+    mpz_t public_key, verification;
+    mpz_inits(public_key, verification, NULL);
+
+    // Recuperation de n mod s
+    mpz_mod(public_key, n, s);
+
+    // verif = p % s
+    mpz_mod(verification, p, s);
+
+    // Verification que p % s = p'
+    if (mpz_cmp(verification, p_prime) == 0)
+    {
+        // Verification que p' divise n mod s
+        // if (mpz_divisible_p(public_key, p) != 0)
+        //     printf("Les deux methodes sont equivalentes !!\n");
+        cle_correct = TRUE;
+    }
+    mpz_clears(public_key, verification, NULL);
+    return cle_correct;
+}
+
+// A modifier
+unsigned int *generation_combinaison(Liste *lists, int n, int i)
+{
+    unsigned int *combinaison = (unsigned int *)malloc(sizeof(int *) * n);
+    int indices[n]; // Tableau pour stocker les indices des éléments dans chaque sous-ensemble
+    int count = 0;  // Compteur pour suivre le nombre de combinaisons générées
+    // Initialisation des indices
+    for (int j = 0; j < n; j++)
+        indices[j] = 0; // Chaque indice commence à 0
+
+    // Boucle pour générer la i-ème combinaison
+    while (1)
+    {
+        // Si le compteur correspond à la i-ème combinaison
+        if (count == i)
+        {
+            for (int j = 0; j < n; j++)
+            {
+                combinaison[j] = lists[j].l[indices[j]];
+            }
+            break;
+        }
+
+        // Incrémenter l'indice du dernier sous-ensemble
+        int j = n - 1;
+        while (j >= 0)
+        {
+            indices[j]++; // Passer à l'élément suivant dans le sous-ensemble
+            if (indices[j] < lists[j].taille)
+            {
+                break; // Si l'indice est valide, on arrête
+            }
+            else
+            {
+                // Si on dépasse la taille du sous-ensemble, réinitialiser l'indice et passer au sous-ensemble précédent
+                indices[j] = 0;
+                j--;
+            }
+        }
+
+        // Si tous les indices ont été réinitialisés à 0, cela signifie qu'on a parcouru toutes les combinaisons
+        if (j < 0)
+        {
+            printf("La %d-ième combinaison n'existe pas.\n", i); // Si on a dépassé la taille des combinaisons possibles
+            return NULL;
+        }
+
+        count++; // Incrémenter le compteur de combinaisons générées
+    }
+
+    // Afficher la combinaison
+    // for (int j = 0; j < n; j++)
+    // {
+    //     printf("%d ", lists[j].l[indices[j]]);
+    // }
+    // printf("\n");
+    return combinaison;
+}
+
+/**
  * Attaque pour recuperer le nombre premier lors de la generation RSA
  * @param lambda nombre de petit premiers
  * @param s liste des petits premiers
@@ -203,12 +319,19 @@ unsigned int attaque_cpa(unsigned int lambda, unsigned int *s, char *trace, char
     m.x = n;
     m.y = lambda;
     initialisation_tableau(m, n, lambda);
+
     // Creation tableau de la taillle maximal (meme si tout le tableau n'est pas forcement utilise)
     float *score = (float *)malloc(sizeof(float) * s[lambda - 1]);
-    unsigned int *candidat = (unsigned int *)malloc(sizeof(unsigned int) * lambda);
+    Liste *candidat = (Liste *)malloc(sizeof(Liste) * lambda);
 
-    for (unsigned int j = 0; j < lambda; j++)
+    unsigned int l0[1] = {1};
+    candidat[0].l = l0;
+    candidat[0].taille = 1;
+
+    for (unsigned int j = 1; j < lambda; j++)
     {
+        int correlation_max = FALSE;
+        int a = FALSE;
         for (unsigned int h = 1; h < s[j]; h++)
         {
             for (unsigned int i = 0; i < n; i++)
@@ -220,67 +343,104 @@ unsigned int attaque_cpa(unsigned int lambda, unsigned int *s, char *trace, char
                 m.tab[i][j] = poids_hamming(nombre % s[j]);
             }
             score[h] = distingueur(m, l, j, n, lambda);
+            if (score[h] == 1.0f && correlation_max && !a)
+            {
+                a = TRUE;
+                // printf("Plusieurs valeurs max pour %d \n", j);
+            }
+            if (score[h] == 1.0f && !correlation_max && !a)
+                correlation_max = TRUE;
         }
+        if (!correlation_max)
+            printf("Pas de correlation de 1 pour %d\n", j);
         candidat[j] = argmax(score, s[j]);
     }
 
-    theoreme_reste_chinois(candidat, s, lambda, p);
-
-    FILE *fptr = fopen(parametres, "r");
-    mpz_t public_key, private_key, verification, prod_modulo;
-    // TODO Verifier que l'equation est vrai
-    /*
-    p = p' mod s (avec s le produit des modulos)
-    p = p' + k x s
-
-    n  = p x q
-    n = (p' + k x s) x q
-      = p' x q + k x s x q
-
-    n = p' x q mod s
-    Donc p' divise n mod s
-    Le resultat me parait coherent mais ca ne fonctionne pas 
-
-    Pour l'instant on verifie juste que
-    p % s = p'
-    */
-
-    // Calcul de s
-    mpz_init_set_ui(prod_modulo, 1);
-    for (int i = 0; i < lambda; i++)
-        mpz_mul_ui(prod_modulo, prod_modulo, s[i]);
-
-    mpz_inits(public_key, private_key, verification, NULL);
-
     // Recuperation de n, p
+    FILE *fptr = fopen(parametres, "r");
+
+    mpz_t public_key, private_key;
+    mpz_inits(public_key, private_key, NULL);
+
     gmp_fscanf(fptr, "n = %Zd\n", public_key);
     gmp_fscanf(fptr, "p = %Zd", private_key);
 
-    // Recuperation de n mod s
-    mpz_mod(public_key, public_key, prod_modulo);
+    fclose(fptr);
 
-    // verif = p % s
-    mpz_mod(verification, private_key, prod_modulo);
+    mpz_t verification, prod_modulo;
+    mpz_init(verification);
 
-    unsigned int valeur_retour;
-    
-    // Verification que p % s = p'
-    if (mpz_cmp(verification, p) == 0)
+    // Calcul de s
+    mpz_init_set_ui(prod_modulo, 1);
+
+    for (int i = 0; i < lambda; i++)
+        mpz_mul_ui(prod_modulo, prod_modulo, s[i]);
+
+    // Comptage de toutes les combinaisons possibles
+    unsigned int nb_combinaison_possible = 1;
+    // printf("Possibilite \n");
+    for (unsigned int j = 0; j < lambda; j++)
     {
-        // Verification que p' divise n mod s
-        if(mpz_divisible_p(public_key,p) != 0)
-            printf("Les deux methodes sont equivalentes !!\n");
-        valeur_retour = 1;
-    }
-    else
-        valeur_retour = 0;
+        // if (candidat[j].taille == 1)
+        //     printf("%d ", candidat[j].l[0]);
 
+        if (candidat[j].taille > 1)
+        {
+            // printf("X%d ", j);
+            if (nb_combinaison_possible < MAX_COMBINAISON)
+                nb_combinaison_possible *= candidat[j].taille;
+            else
+                nb_combinaison_possible = MAX_COMBINAISON;
+        }
+    }
+    /*
+    printf("\n");
+
+    for (int i = 0; i < lambda; i++)
+    {
+        if (candidat[i].taille > 1)
+        {
+            printf("X%d : ", i);
+            for (int j = 0; j < candidat[i].taille; j++)
+                printf("%d ", candidat[i].l[j]);
+            printf("\n");
+        }
+    }
+    */
+    unsigned int valeur_retour = 0;
+
+    if (nb_combinaison_possible < MAX_COMBINAISON)
+    {
+        unsigned int *potentiel_candidat;
+
+        unsigned int nb_combinaison_teste = 0;
+        // printf("Combinaison possible : %d \n", nb_combinaison_possible);
+
+        while (nb_combinaison_teste < nb_combinaison_possible && !valeur_retour)
+        {
+            potentiel_candidat = generation_combinaison(candidat, lambda, nb_combinaison_teste);
+
+            // printf("%d : ", nb_combinaison_teste);
+            // for (int i = 0; i < lambda; i++)
+            //     printf("%d ", potentiel_candidat[i]);
+            // printf("\n");
+
+            theoreme_reste_chinois(potentiel_candidat, s, lambda, p);
+
+            valeur_retour = verification_cle(public_key, private_key, p, prod_modulo);
+            nb_combinaison_teste++;
+        }
+        free(potentiel_candidat);
+    }
+
+    else
+        printf("Trop de combinaison possible !!! (%d)\n", nb_combinaison_possible);
     mpz_clears(public_key, private_key, verification, prod_modulo, p, NULL);
 
     free_tableau(l);
     free_tableau(m);
     free(candidat);
     free(score);
-    fclose(fptr);
+    // TODO free liste de candidat
     return valeur_retour;
 }
