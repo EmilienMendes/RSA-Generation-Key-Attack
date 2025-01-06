@@ -4,6 +4,7 @@
 #define TRUE 1
 #define FALSE 0
 #define MAX_COMBINAISON 25000
+#define TRESHOLD_COMPARAISON_FLOAT 0.001
 /*
   Mesure de la trace obtenu
 */

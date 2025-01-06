@@ -83,7 +83,7 @@ void generation_entier_crible_optimise(unsigned int k, unsigned int N, unsigned 
     /*
     if (trace != NULL)
     {
-        printf("Reste reel :\n");
+        printf("\nReste reel :\n");
         mpz_t tmp;
         mpz_init(tmp);
         for (int i = 0; i < N; i++)

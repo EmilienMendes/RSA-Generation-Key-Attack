@@ -156,7 +156,7 @@ Liste argmax(float *liste, int taille_liste)
     unsigned int nb_element = 0;
     for (unsigned int i = 1; i < taille_liste; i++)
     {
-        if (liste[i] == liste[index_max])
+        if ((liste[index_max] - liste[i]) < TRESHOLD_COMPARAISON_FLOAT)
             nb_element++;
     }
     // Cree la liste avec les elements qui ont la valeur max
@@ -167,13 +167,13 @@ Liste argmax(float *liste, int taille_liste)
     unsigned j = 0;
     for (unsigned int i = 1; i < taille_liste; i++)
     {
-        if (liste[i] == liste[index_max])
+        if ((liste[index_max] -liste[i]) < TRESHOLD_COMPARAISON_FLOAT)
         {
             liste_valeur_max.l[j] = i;
             j++;
         }
     }
-
+    
     return liste_valeur_max;
 }
 
@@ -232,8 +232,8 @@ unsigned int verification_cle(mpz_t n, mpz_t p, mpz_t p_prime, mpz_t s)
     if (mpz_cmp(verification, p_prime) == 0)
     {
         // Verification que p' divise n mod s
-        // if (mpz_divisible_p(public_key, p) != 0)
-        //     printf("Les deux methodes sont equivalentes !!\n");
+        if (mpz_divisible_p(public_key, p) != 0)
+            printf("Les deux methodes sont equivalentes !!\n");
         cle_correct = TRUE;
     }
     mpz_clears(public_key, verification, NULL);
@@ -289,13 +289,6 @@ unsigned int *generation_combinaison(Liste *lists, int n, int i)
 
         count++; // Incrémenter le compteur de combinaisons générées
     }
-
-    // Afficher la combinaison
-    // for (int j = 0; j < n; j++)
-    // {
-    //     printf("%d ", lists[j].l[indices[j]]);
-    // }
-    // printf("\n");
     return combinaison;
 }
 
@@ -327,7 +320,6 @@ unsigned int attaque_cpa(unsigned int lambda, unsigned int *s, char *trace, char
     unsigned int l0[1] = {1};
     candidat[0].l = l0;
     candidat[0].taille = 1;
-
     for (unsigned int j = 1; j < lambda; j++)
     {
         int correlation_max = FALSE;
@@ -351,8 +343,8 @@ unsigned int attaque_cpa(unsigned int lambda, unsigned int *s, char *trace, char
             if (score[h] == 1.0f && !correlation_max && !a)
                 correlation_max = TRUE;
         }
-        if (!correlation_max)
-            printf("Pas de correlation de 1 pour %d\n", j);
+        // if (!correlation_max)
+        //     printf("Pas de correlation de 1 pour %d\n", j);
         candidat[j] = argmax(score, s[j]);
     }
 
@@ -378,11 +370,12 @@ unsigned int attaque_cpa(unsigned int lambda, unsigned int *s, char *trace, char
 
     // Comptage de toutes les combinaisons possibles
     unsigned int nb_combinaison_possible = 1;
+
     // printf("Possibilite \n");
     for (unsigned int j = 0; j < lambda; j++)
     {
         // if (candidat[j].taille == 1)
-        //     printf("%d ", candidat[j].l[0]);
+        // printf("%d ", candidat[j].l[0]);
 
         if (candidat[j].taille > 1)
         {
@@ -434,7 +427,7 @@ unsigned int attaque_cpa(unsigned int lambda, unsigned int *s, char *trace, char
     }
 
     else
-        printf("Trop de combinaison possible !!! (%d)\n", nb_combinaison_possible);
+        printf("Trop de combinaison possible !!! (> 25 000)\n");
     mpz_clears(public_key, private_key, verification, prod_modulo, p, NULL);
 
     free_tableau(l);
