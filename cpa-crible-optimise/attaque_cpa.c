@@ -16,6 +16,12 @@ void afficher_tableau(Tableau v)
     printf("\n");
 }
 
+void free_liste_entier(Liste *liste, unsigned int nb_element)
+{
+    for (int i = 1; i < nb_element; i++)
+        free(liste[i].l);
+}
+
 /**
  * Initialisation du tableau
  * @param t tableau d'entre
@@ -39,8 +45,8 @@ void free_tableau(Tableau t)
     free(t.tab);
 }
 
-// https://stackoverflow.com/questions/12733105/c-function-that-counts-lines-in-file
-int countlines(char *filename)
+// https://stackoverflow.com/questions/12733105/c-function-that-compteurs-lines-in-file
+int compteurlines(char *filename)
 {
     FILE *fp = fopen(filename, "r");
     int ch = 0;
@@ -70,7 +76,7 @@ int countlines(char *filename)
 Tableau recuperation_mesure(char *fichier, unsigned int lambda)
 {
     // n = taille du fichier / lambda
-    unsigned int n = countlines(fichier) / lambda;
+    unsigned int n = compteurlines(fichier) / lambda;
 
     FILE *fptr = fopen(fichier, "r");
 
@@ -167,13 +173,13 @@ Liste argmax(float *liste, int taille_liste)
     unsigned j = 0;
     for (unsigned int i = 1; i < taille_liste; i++)
     {
-        if ((liste[index_max] -liste[i]) < TRESHOLD_COMPARAISON_FLOAT)
+        if ((liste[index_max] - liste[i]) < TRESHOLD_COMPARAISON_FLOAT)
         {
             liste_valeur_max.l[j] = i;
             j++;
         }
     }
-    
+
     return liste_valeur_max;
 }
 
@@ -231,6 +237,7 @@ unsigned int verification_cle(mpz_t n, mpz_t p, mpz_t p_prime, mpz_t s)
     // Verification que p % s = p'
     if (mpz_cmp(verification, p_prime) == 0)
     {
+        // gmp_printf("Recuperation partiel de la cle p' = %Zd\n",p_prime);
         // Verification que p' divise n mod s
         if (mpz_divisible_p(public_key, p) != 0)
             printf("Les deux methodes sont equivalentes !!\n");
@@ -241,55 +248,60 @@ unsigned int verification_cle(mpz_t n, mpz_t p, mpz_t p_prime, mpz_t s)
 }
 
 // A modifier
-unsigned int *generation_combinaison(Liste *lists, int n, int i)
+/**
+ * Effectue le theoreme des restes chinois avec toutes les combinaisons possibles
+ */
+unsigned int generation_combinaison(Liste *candidat, unsigned int *s, unsigned int lambda, unsigned int nb_combinaisons_possible, mpz_t p, mpz_t public_key, mpz_t private_key, mpz_t prod_modulo)
 {
-    unsigned int *combinaison = (unsigned int *)malloc(sizeof(int *) * n);
-    int indices[n]; // Tableau pour stocker les indices des éléments dans chaque sous-ensemble
-    int count = 0;  // Compteur pour suivre le nombre de combinaisons générées
-    // Initialisation des indices
-    for (int j = 0; j < n; j++)
-        indices[j] = 0; // Chaque indice commence à 0
+    // Attribut pour la liste des candidats
+    unsigned int valeur_retour = FALSE;
+    unsigned int nb_combinaison_teste = 0;
+    unsigned int *potentiel_candidat = (unsigned int *)malloc(sizeof(int *) * lambda);
 
-    // Boucle pour générer la i-ème combinaison
-    while (1)
+    // if (nb_combinaisons_possible > 1)
+    //     printf("Combinaison possibles : %d\n", nb_combinaisons_possible);
+
+    // Attributs pour le candidat courant
+    // Tableau pour stocker les indices des elements dans chaque sous-ensemble
+    int indices[lambda];
+
+    // Initialisation des indices de la combinaison
+    for (int j = 0; j < lambda; j++)
+        indices[j] = 0;
+
+    while (nb_combinaison_teste < nb_combinaisons_possible)
     {
-        // Si le compteur correspond à la i-ème combinaison
-        if (count == i)
-        {
-            for (int j = 0; j < n; j++)
-            {
-                combinaison[j] = lists[j].l[indices[j]];
-            }
-            break;
-        }
+        // Affectation de la combinaison courantes
+        for (int j = 0; j < lambda; j++)
+            potentiel_candidat[j] = candidat[j].l[indices[j]];
+        // Test de la combinaison courante
+        theoreme_reste_chinois(potentiel_candidat, s, lambda, p);
+        valeur_retour = verification_cle(public_key, private_key, p, prod_modulo);
+        nb_combinaison_teste++;
 
-        // Incrémenter l'indice du dernier sous-ensemble
-        int j = n - 1;
-        while (j >= 0)
+        if (valeur_retour)
+            break;
+
+        // Construction de la combinaison suivante
+        int k = 0;
+
+        while (k < lambda)
         {
-            indices[j]++; // Passer à l'élément suivant dans le sous-ensemble
-            if (indices[j] < lists[j].taille)
-            {
-                break; // Si l'indice est valide, on arrête
-            }
+            indices[k]++;
+
+            if (indices[k] < candidat[k].taille)
+                break;
             else
             {
-                // Si on dépasse la taille du sous-ensemble, réinitialiser l'indice et passer au sous-ensemble précédent
-                indices[j] = 0;
-                j--;
+                // Si on depasse la taille du sous-ensemble, reinitialiser l'indice et passer au sous-ensemble precedent
+                indices[k] = 0;
+                k++;
             }
         }
-
-        // Si tous les indices ont été réinitialisés à 0, cela signifie qu'on a parcouru toutes les combinaisons
-        if (j < 0)
-        {
-            printf("La %d-ième combinaison n'existe pas.\n", i); // Si on a dépassé la taille des combinaisons possibles
-            return NULL;
-        }
-
-        count++; // Incrémenter le compteur de combinaisons générées
     }
-    return combinaison;
+
+    free(potentiel_candidat);
+    return valeur_retour;
 }
 
 /**
@@ -320,10 +332,10 @@ unsigned int attaque_cpa(unsigned int lambda, unsigned int *s, char *trace, char
     unsigned int l0[1] = {1};
     candidat[0].l = l0;
     candidat[0].taille = 1;
+
     for (unsigned int j = 1; j < lambda; j++)
     {
         int correlation_max = FALSE;
-        int a = FALSE;
         for (unsigned int h = 1; h < s[j]; h++)
         {
             for (unsigned int i = 0; i < n; i++)
@@ -335,12 +347,7 @@ unsigned int attaque_cpa(unsigned int lambda, unsigned int *s, char *trace, char
                 m.tab[i][j] = poids_hamming(nombre % s[j]);
             }
             score[h] = distingueur(m, l, j, n, lambda);
-            if (score[h] == 1.0f && correlation_max && !a)
-            {
-                a = TRUE;
-                // printf("Plusieurs valeurs max pour %d \n", j);
-            }
-            if (score[h] == 1.0f && !correlation_max && !a)
+            if (score[h] == 1.0f && !correlation_max)
                 correlation_max = TRUE;
         }
         // if (!correlation_max)
@@ -369,8 +376,8 @@ unsigned int attaque_cpa(unsigned int lambda, unsigned int *s, char *trace, char
         mpz_mul_ui(prod_modulo, prod_modulo, s[i]);
 
     // Comptage de toutes les combinaisons possibles
-    unsigned int nb_combinaison_possible = 1;
-
+    mpz_t nb_combinaison_possible;
+    mpz_init_set_ui(nb_combinaison_possible,1);
     // printf("Possibilite \n");
     for (unsigned int j = 0; j < lambda; j++)
     {
@@ -380,12 +387,10 @@ unsigned int attaque_cpa(unsigned int lambda, unsigned int *s, char *trace, char
         if (candidat[j].taille > 1)
         {
             // printf("X%d ", j);
-            if (nb_combinaison_possible < MAX_COMBINAISON)
-                nb_combinaison_possible *= candidat[j].taille;
-            else
-                nb_combinaison_possible = MAX_COMBINAISON;
+            mpz_mul_ui(nb_combinaison_possible,nb_combinaison_possible,candidat[j].taille);
         }
     }
+
     /*
     printf("\n");
 
@@ -399,41 +404,19 @@ unsigned int attaque_cpa(unsigned int lambda, unsigned int *s, char *trace, char
             printf("\n");
         }
     }
-    */
-    unsigned int valeur_retour = 0;
+    // */
+    unsigned int valeur_retour = FALSE;
 
-    if (nb_combinaison_possible < MAX_COMBINAISON)
-    {
-        unsigned int *potentiel_candidat;
-
-        unsigned int nb_combinaison_teste = 0;
-        // printf("Combinaison possible : %d \n", nb_combinaison_possible);
-
-        while (nb_combinaison_teste < nb_combinaison_possible && !valeur_retour)
-        {
-            potentiel_candidat = generation_combinaison(candidat, lambda, nb_combinaison_teste);
-
-            // printf("%d : ", nb_combinaison_teste);
-            // for (int i = 0; i < lambda; i++)
-            //     printf("%d ", potentiel_candidat[i]);
-            // printf("\n");
-
-            theoreme_reste_chinois(potentiel_candidat, s, lambda, p);
-
-            valeur_retour = verification_cle(public_key, private_key, p, prod_modulo);
-            nb_combinaison_teste++;
-        }
-        free(potentiel_candidat);
-    }
-
-    else
-        printf("Trop de combinaison possible !!! (> 25 000)\n");
-    mpz_clears(public_key, private_key, verification, prod_modulo, p, NULL);
+    if (mpz_cmp_ui(nb_combinaison_possible,MAX_COMBINAISON) != 1)
+        valeur_retour = generation_combinaison(candidat, s, lambda, mpz_get_ui(nb_combinaison_possible), p, public_key, private_key, prod_modulo);
+    // else
+    //     gmp_printf("Trop de combinaison possible !!! ( %Zd > %d)\n",nb_combinaison_possible,MAX_COMBINAISON);
+    mpz_clears(nb_combinaison_possible,public_key, private_key, verification, prod_modulo, p, NULL);
 
     free_tableau(l);
     free_tableau(m);
-    free(candidat);
+    free_liste_entier(candidat, lambda);
     free(score);
-    // TODO free liste de candidat
+
     return valeur_retour;
 }

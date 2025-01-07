@@ -23,7 +23,7 @@ unsigned int *generation_liste_nombres_premiers(unsigned int N)
  * @param taille taille de la liste
  * @param liste liste a supprimer
  */
-void free_liste(unsigned int taille, mpz_t *liste)
+void free_mpz_liste(unsigned int taille, mpz_t *liste)
 {
     for (unsigned int i = 0; i < taille; i++)
         mpz_clear(liste[i]);

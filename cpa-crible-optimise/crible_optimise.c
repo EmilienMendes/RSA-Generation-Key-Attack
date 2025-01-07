@@ -95,10 +95,10 @@ void generation_entier_crible_optimise(unsigned int k, unsigned int N, unsigned 
         printf("\n");
         mpz_clear(tmp);
     }
-    */
+    // */
     mpz_set(p, v);
     mpz_clear(v);
-    free_liste(N, r);
+    free_mpz_liste(N, r);
     if (trace != NULL)
 
         fclose(fptr);
