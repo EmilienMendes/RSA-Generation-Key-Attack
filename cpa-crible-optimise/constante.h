@@ -10,7 +10,7 @@
 */
 typedef struct
 {
-  unsigned int **tab;
+  float **tab;
   unsigned int x;
   unsigned int y;
 } Tableau;

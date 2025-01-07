@@ -23,4 +23,4 @@ test_gauss : compil_test_gauss
 	./test_gauss
 
 clean :
-	rm -f main ${ptrace} ${parametres} test_gauss log
+	rm -f main ${ptrace} ${parametres} test_gauss log stats

@@ -10,7 +10,7 @@ void afficher_tableau(Tableau v)
     for (unsigned int i = 0; i < longeur; i++)
     {
         for (unsigned int j = 0; j < largeur; j++)
-            printf("[%d][%d] : %d\n", i, j, v.tab[i][j]);
+            printf("[%d][%d] : %f\n", i, j, v.tab[i][j]);
         printf("\n");
     }
     printf("\n");
@@ -31,7 +31,7 @@ void free_liste_entier(Liste *liste, unsigned int nb_element)
 void initialisation_tableau(Tableau t, unsigned int longeur, unsigned int largeur)
 {
     for (unsigned int i = 0; i < longeur; i++)
-        t.tab[i] = (unsigned int *)malloc(sizeof(int) * largeur);
+        t.tab[i] = (float *)malloc(sizeof(int) * largeur);
 }
 
 /**
@@ -81,16 +81,16 @@ Tableau recuperation_mesure(char *fichier, unsigned int lambda)
     FILE *fptr = fopen(fichier, "r");
 
     Tableau l;
-    l.tab = (unsigned int **)malloc(sizeof(unsigned int *) * n);
+    l.tab = (float  **)malloc(sizeof(float *) * n);
     initialisation_tableau(l, n, lambda);
     l.x = n;
     l.y = lambda;
-    unsigned int valeur;
+    float valeur;
     for (unsigned int i = 0; i < n; i++)
     {
         for (unsigned int j = 0; j < lambda; j++)
         {
-            fscanf(fptr, "%u", &valeur);
+            fscanf(fptr, "%f", &valeur);
             l.tab[i][j] = valeur;
         }
     }
@@ -320,7 +320,7 @@ unsigned int attaque_cpa(unsigned int lambda, unsigned int *s, char *trace, char
     int n = l.x;
 
     Tableau m;
-    m.tab = (unsigned int **)malloc(sizeof(unsigned int *) * n);
+    m.tab = (float  **)malloc(sizeof(float *) * n);
     m.x = n;
     m.y = lambda;
     initialisation_tableau(m, n, lambda);

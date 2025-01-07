@@ -23,7 +23,7 @@ unsigned int verification_entier_nul(mpz_t *liste, unsigned int taille)
  * @param trace fichier qui contiendra la trace de l'execution du programme (NULL pour ne pas stocker la trace)
  * @param generator generateur de nombre aleatoire
  */
-void generation_entier_crible_optimise(unsigned int k, unsigned int N, unsigned int t, mpz_t p, unsigned int *s, int sigma, char *trace, gmp_randstate_t generator)
+void generation_entier_crible_optimise(unsigned int k, unsigned int N, unsigned int t, mpz_t p, unsigned int *s, float sigma, char *trace, gmp_randstate_t generator)
 {
     FILE *fptr;
     if (trace != NULL)
@@ -56,8 +56,8 @@ void generation_entier_crible_optimise(unsigned int k, unsigned int N, unsigned 
             {
                 if (trace != NULL)
                 {
-                    // int bruit = (int) gauss(sigma);
-                    fprintf(fptr, "%d\n", poids_hamming(mpz_get_ui(r[j])));
+                    float bruit = gauss(sigma);
+                    fprintf(fptr, "%f\n", bruit + poids_hamming(mpz_get_ui(r[j])));
                 }
                 mpz_add_ui(r[j], r[j], 2);
                 mpz_mod_ui(r[j], r[j], s[j]);
@@ -71,8 +71,8 @@ void generation_entier_crible_optimise(unsigned int k, unsigned int N, unsigned 
             {
                 if (trace != NULL)
                 {
-                    // int bruit = (int) gauss(sigma);
-                    fprintf(fptr, "%d\n", poids_hamming(mpz_get_ui(r[j])));
+                    float bruit = gauss(sigma);
+                    fprintf(fptr, "%f\n", bruit + poids_hamming(mpz_get_ui(r[j])));
                 }
 
                 mpz_add_ui(r[j], r[j], 2);

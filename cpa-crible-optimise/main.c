@@ -1,15 +1,15 @@
 #include "crible_optimise.h"
 #include "attaque_cpa.h"
 
-void afficher_liste(unsigned int *s, unsigned int N)
+void afficher_liste(float *s, unsigned int N)
 {
     printf("s = [");
     for (int i = 0; i < N - 1; i++)
-        printf("%u,", s[i]);
-    printf("%u]\n", s[N - 1]);
+        printf("%f,", s[i]);
+    printf("%f]\n", s[N - 1]);
 }
 
-void acquisition_trace_cpa(unsigned int k, unsigned int lambda, unsigned int t, unsigned int *s, int bruit, char *fichier_trace, char *fichier_parametre, gmp_randstate_t generator)
+void acquisition_trace_cpa(unsigned int k, unsigned int lambda, unsigned int t, unsigned int *s, float bruit, char *fichier_trace, char *fichier_parametre, gmp_randstate_t generator)
 {
     mpz_t p, q, n;
     mpz_inits(p, q, n, NULL);
@@ -20,7 +20,7 @@ void acquisition_trace_cpa(unsigned int k, unsigned int lambda, unsigned int t, 
     mpz_clears(p, q, n, NULL);
 }
 
-unsigned int exemple_attaque_cpa_horizontal(unsigned int k, unsigned int lambda, unsigned int t, unsigned int *s, int bruit, char *fichier_trace, char *fichier_parametre, gmp_randstate_t generator)
+unsigned int exemple_attaque_cpa_horizontal(unsigned int k, unsigned int lambda, unsigned int t, unsigned int *s, float bruit, char *fichier_trace, char *fichier_parametre, gmp_randstate_t generator)
 {
 
     acquisition_trace_cpa(k, lambda, t, s, bruit, fichier_trace, fichier_parametre, generator);
@@ -42,7 +42,7 @@ int main(int argc, char **argv)
     // Generateurs aleatoires
     long int seed = time(NULL);
     srand(seed);
-    printf("Seed %ld\n",seed);  
+    printf("Seed %ld\n", seed);
     gmp_randstate_t generator;
     gmp_randinit_default(generator);
     gmp_randseed_ui(generator, seed);
@@ -52,25 +52,33 @@ int main(int argc, char **argv)
     unsigned int t = atoi(argv[3]);
     char *fichier_trace = argv[4];
     char *fichier_cle = argv[5];
-    int bruit = 0;
+    // float bruit = 0.5;
+
     // Generation des petits premiers
     unsigned int *s = generation_liste_nombres_premiers(lambda);
 
-    unsigned int nb_attaque_reussi = 0;
-    unsigned int nb_attaque = 1000;
-    for (unsigned int i = 0; i < nb_attaque; i++)
+    unsigned int nb_attaque_reussi;
+    unsigned int nb_attaque = 100;
+
+    FILE *fptr = fopen("stats", "w");
+    for (float bruit = 0; bruit < 2; bruit += 0.1)
     {
-        if( !(i%100))
-            printf("Attaque %d \n", i);
-        nb_attaque_reussi += exemple_attaque_cpa_horizontal(k, lambda, t, s, bruit, fichier_trace, fichier_cle, generator);
+        nb_attaque_reussi = 0;
+        for (unsigned int i = 0; i < nb_attaque; i++)
+        {
+            // if (!(i % 20))
+            //     printf("Attaque %d \n", i);
+            nb_attaque_reussi += exemple_attaque_cpa_horizontal(k, lambda, t, s, bruit, fichier_trace, fichier_cle, generator);
+        }
+        float pourcentage_reussite = ((float)nb_attaque_reussi / (float)nb_attaque) * 100.0f;
+        printf("Succes de l'attaque avec un bruit de %.1f : %.1f %% \n", bruit, pourcentage_reussite);
+        fprintf(fptr, "%.1f %.1f \n", bruit, pourcentage_reussite);
     }
+    fclose(fptr);
     // if (nb_attaque_reussi)
     //     printf("Reussi\n");
     // else
     //     printf("Echoue\n");
-
-    float pourcentage_reussite = ((float)nb_attaque_reussi / (float)nb_attaque) * 100.0f;
-    printf("Succes de l'attaque %.1f %% \n", pourcentage_reussite);
 
     return 0;
 }
