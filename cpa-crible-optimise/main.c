@@ -25,8 +25,8 @@ unsigned int exemple_attaque_cpa_horizontal(unsigned int k, unsigned int lambda,
 
     acquisition_trace_cpa(k, lambda, t, s, bruit, fichier_trace, fichier_parametre, generator);
     unsigned int succes_attaque = attaque_cpa(lambda, s, fichier_trace, fichier_parametre);
-
-    return succes_attaque;
+    unsigned int succes_attaque2 = attaque_cpa2(lambda, s, fichier_trace, fichier_parametre);
+    return succes_attaque2;
 }
 
 int main(int argc, char **argv)
@@ -42,7 +42,7 @@ int main(int argc, char **argv)
     // Generateurs aleatoires
     long int seed = time(NULL);
     srand(seed);
-    printf("Seed %ld\n", seed);
+    // printf("Seed %ld\n", seed);
     gmp_randstate_t generator;
     gmp_randinit_default(generator);
     gmp_randseed_ui(generator, seed);
@@ -52,29 +52,29 @@ int main(int argc, char **argv)
     unsigned int t = atoi(argv[3]);
     char *fichier_trace = argv[4];
     char *fichier_cle = argv[5];
-    // float bruit = 0.5;
 
     // Generation des petits premiers
     unsigned int *s = generation_liste_nombres_premiers(lambda);
 
     unsigned int nb_attaque_reussi;
-    unsigned int nb_attaque = 100;
+    unsigned int nb_attaque = 1000;
 
-    FILE *fptr = fopen("stats", "w");
-    for (float bruit = 0; bruit < 2; bruit += 0.1)
+    // FILE *fptr = fopen("stats", "a");
+    for (float bruit = 0; bruit <= 0; bruit += 1)
     {
         nb_attaque_reussi = 0;
         for (unsigned int i = 0; i < nb_attaque; i++)
         {
-            // if (!(i % 20))
-            //     printf("Attaque %d \n", i);
-            nb_attaque_reussi += exemple_attaque_cpa_horizontal(k, lambda, t, s, bruit, fichier_trace, fichier_cle, generator);
+            if (!(i % 100))
+                printf("Attaque %d \n", i);
+            if(exemple_attaque_cpa_horizontal(k, lambda, t, s, bruit, fichier_trace, fichier_cle, generator)> 256)
+                nb_attaque_reussi++;
         }
         float pourcentage_reussite = ((float)nb_attaque_reussi / (float)nb_attaque) * 100.0f;
         printf("Succes de l'attaque avec un bruit de %.1f : %.1f %% \n", bruit, pourcentage_reussite);
-        fprintf(fptr, "%.1f %.1f \n", bruit, pourcentage_reussite);
+        // fprintf(fptr, "%.1f %.1f \n", bruit, pourcentage_reussite);
     }
-    fclose(fptr);
+    // fclose(fptr);
     // if (nb_attaque_reussi)
     //     printf("Reussi\n");
     // else

@@ -19,5 +19,6 @@ Liste argmax(float *liste, int taille_liste);
 void theoreme_reste_chinois(unsigned int *a, unsigned int *r, unsigned int lambda, mpz_t x);
 
 unsigned int attaque_cpa(unsigned int lambda, unsigned int *s,char *trace, char *parametres);
+unsigned int attaque_cpa2(unsigned int lambda, unsigned int *s,char *trace, char *parametres);
 
 #endif

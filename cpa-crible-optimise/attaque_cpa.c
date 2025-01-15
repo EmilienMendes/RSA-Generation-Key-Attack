@@ -81,7 +81,7 @@ Tableau recuperation_mesure(char *fichier, unsigned int lambda)
     FILE *fptr = fopen(fichier, "r");
 
     Tableau l;
-    l.tab = (float  **)malloc(sizeof(float *) * n);
+    l.tab = (float **)malloc(sizeof(float *) * n);
     initialisation_tableau(l, n, lambda);
     l.x = n;
     l.y = lambda;
@@ -320,7 +320,7 @@ unsigned int attaque_cpa(unsigned int lambda, unsigned int *s, char *trace, char
     int n = l.x;
 
     Tableau m;
-    m.tab = (float  **)malloc(sizeof(float *) * n);
+    m.tab = (float **)malloc(sizeof(float *) * n);
     m.x = n;
     m.y = lambda;
     initialisation_tableau(m, n, lambda);
@@ -377,7 +377,7 @@ unsigned int attaque_cpa(unsigned int lambda, unsigned int *s, char *trace, char
 
     // Comptage de toutes les combinaisons possibles
     mpz_t nb_combinaison_possible;
-    mpz_init_set_ui(nb_combinaison_possible,1);
+    mpz_init_set_ui(nb_combinaison_possible, 1);
     // printf("Possibilite \n");
     for (unsigned int j = 0; j < lambda; j++)
     {
@@ -387,7 +387,7 @@ unsigned int attaque_cpa(unsigned int lambda, unsigned int *s, char *trace, char
         if (candidat[j].taille > 1)
         {
             // printf("X%d ", j);
-            mpz_mul_ui(nb_combinaison_possible,nb_combinaison_possible,candidat[j].taille);
+            mpz_mul_ui(nb_combinaison_possible, nb_combinaison_possible, candidat[j].taille);
         }
     }
 
@@ -407,16 +407,116 @@ unsigned int attaque_cpa(unsigned int lambda, unsigned int *s, char *trace, char
     // */
     unsigned int valeur_retour = FALSE;
 
-    if (mpz_cmp_ui(nb_combinaison_possible,MAX_COMBINAISON) != 1)
+    // FILE *fptr2 = fopen("stats2", "a");
+
+    if (mpz_cmp_ui(nb_combinaison_possible, MAX_COMBINAISON) != 1)
         valeur_retour = generation_combinaison(candidat, s, lambda, mpz_get_ui(nb_combinaison_possible), p, public_key, private_key, prod_modulo);
     // else
     //     gmp_printf("Trop de combinaison possible !!! ( %Zd > %d)\n",nb_combinaison_possible,MAX_COMBINAISON);
-    mpz_clears(nb_combinaison_possible,public_key, private_key, verification, prod_modulo, p, NULL);
+    mpz_clears(nb_combinaison_possible, public_key, private_key, verification, prod_modulo, p, NULL);
 
+    // fprintf(fptr2, "%d %d\n", n, valeur_retour);
     free_tableau(l);
     free_tableau(m);
     free_liste_entier(candidat, lambda);
     free(score);
+    // fclose(fptr2);
+    return valeur_retour;
+}
 
+unsigned int attaque_cpa2(unsigned int lambda, unsigned int *s, char *trace, char *parametres)
+{
+
+    Tableau l = recuperation_mesure(trace, lambda);
+    int n = l.x;
+
+    Tableau m;
+    m.tab = (float **)malloc(sizeof(float *) * n);
+    m.x = n;
+    m.y = lambda;
+    initialisation_tableau(m, n, lambda);
+
+    // Creation tableau de la taillle maximal (meme si tout le tableau n'est pas forcement utilise)
+    float *score = (float *)malloc(sizeof(float) * s[lambda - 1]);
+    Liste *candidat = (Liste *)malloc(sizeof(Liste) * lambda);
+
+    unsigned int l0[1] = {1};
+    candidat[0].l = l0;
+    candidat[0].taille = 1;
+
+    for (unsigned int j = 1; j < lambda; j++)
+    {
+        for (unsigned int h = 1; h < s[j]; h++)
+        {
+            for (unsigned int i = 0; i < n; i++)
+            {
+                int nombre = h - (n - i) * 2; // Marche uniquement pour  n - i ????
+                // On prend le nombre et on le fais devenir positif s'il ne l'etait pas deja
+                while (nombre < 0)
+                    nombre += s[j];
+                m.tab[i][j] = poids_hamming(nombre % s[j]);
+            }
+            score[h] = distingueur(m, l, j, n, lambda);
+        }
+        candidat[j] = argmax(score, s[j]);
+    }
+
+    // Recuperation de n, p
+    FILE *fptr = fopen(parametres, "r");
+
+    mpz_t public_key, private_key;
+    mpz_inits(public_key, private_key, NULL);
+
+    gmp_fscanf(fptr, "n = %Zd\n", public_key);
+    gmp_fscanf(fptr, "p = %Zd", private_key);
+    fclose(fptr);
+
+    mpz_t verification, prod_modulo;
+    mpz_init(verification);
+
+    // Calcul de s
+    mpz_init_set_ui(prod_modulo, 1);
+
+    for (int i = 0; i < lambda; i++)
+        mpz_mul_ui(prod_modulo, prod_modulo, s[i]);
+
+    unsigned int valeur_retour = FALSE;
+
+    FILE *fptr2 = fopen("stats2", "a");
+
+    mpz_t modulo;
+    mpz_init(modulo);
+
+    unsigned int *candidat_reel = (unsigned int *)malloc(sizeof(int) * lambda);
+    // Pour chaque reste
+    for (unsigned int j = 0; j < lambda; j++)
+    {
+        candidat_reel[j] = 0;
+        mpz_mod_ui(modulo, private_key, s[j]);
+        for (unsigned int i = 0; i < candidat[j].taille; i++)
+        {
+            if (mpz_cmp_ui(modulo, candidat[j].l[i]) == 0)
+                candidat_reel[j] = candidat[j].l[i];
+        }
+    }
+    mpz_clear(modulo);
+
+    mpz_t p;
+    mpz_init(p);
+
+    theoreme_reste_chinois(candidat_reel,s,lambda,p);
+
+    if(verification_cle(public_key, private_key, p, prod_modulo))
+        valeur_retour = mpz_sizeinbase(p,2);
+
+
+    mpz_clears(public_key, private_key, verification, prod_modulo, p, NULL);
+
+    fprintf(fptr2, "%d %d\n", n, valeur_retour);
+    free_tableau(l);
+    free_tableau(m);
+    free_liste_entier(candidat, lambda);
+    free(score);
+    fclose(fptr2);
     return valeur_retour;
 }
