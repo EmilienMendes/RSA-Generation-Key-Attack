@@ -99,9 +99,6 @@ Liste_Diviseur *recuperer_diviseur(unsigned int N, char *fichier, unsigned int *
     return liste;
 }
 
-
-
-
 /**
  * Suppression de tous les elements en double dans la liste des diviseurs pour pouvoir faire le theoreme des restes chinois
  * @param liste listes de tous les diviseurs avec des doublons
@@ -158,10 +155,11 @@ Liste_Diviseur *enlever_doublon(Liste_Diviseur *liste, unsigned int taille_liste
 /**
  TODO Ajouter description
  */
-Liste_Diviseur *recuperer_diviseur_unique(unsigned int N,char *fichier,unsigned int *taille_liste,unsigned int *m){
+Liste_Diviseur *recuperer_diviseur_unique(unsigned int N, char *fichier, unsigned int *taille_liste, unsigned int *m)
+{
     unsigned int taille_liste_doublon = 0;
-    Liste_Diviseur *liste  = recuperer_diviseur(N,fichier,&taille_liste_doublon,m);
-    Liste_Diviseur *liste_sans_doublon = enlever_doublon(liste,taille_liste_doublon,taille_liste);
+    Liste_Diviseur *liste = recuperer_diviseur(N, fichier, &taille_liste_doublon, m);
+    Liste_Diviseur *liste_sans_doublon = enlever_doublon(liste, taille_liste_doublon, taille_liste);
     free(liste);
     return liste_sans_doublon;
 }
@@ -346,28 +344,28 @@ unsigned int attaque_spa(Liste_Diviseur *pliste, Liste_Diviseur *qliste, unsigne
     unsigned int nb_bits_cq = mpz_sizeinbase(cq, 2);
 
     unsigned int attaque_possible = FALSE;
-    if (nb_bits_cp < k / 2 && nb_bits_cq < k / 2)
-        printf(" ");
-        // printf("Pas assez de bits pour faire l'attaque \ncp : (%d bits reel < %d bits requis )\ncq : (%d bits reel < %d bits requis ) \n", nb_bits_cp, k / 2, nb_bits_cq, k / 2);
+    // if (nb_bits_cp < k / 2 && nb_bits_cq < k / 2)
+    //     printf(" ");
+    // printf("Pas assez de bits pour faire l'attaque \ncp : (%d bits reel < %d bits requis )\ncq : (%d bits reel < %d bits requis ) \n", nb_bits_cp, k / 2, nb_bits_cq, k / 2);
+    // else
+    // {
+    // printf("Attaque possible ");
+    if (nb_bits_cp > nb_bits_cq)
+    {
+        attaque_possible = 2;
+        // printf("avec cp : %d bits \n", nb_bits_cp);
+    }
+    else if (nb_bits_cp < nb_bits_cq)
+    {
+        attaque_possible = 1;
+        // printf("avec cq : %d bits \n", nb_bits_cq);
+    }
     else
     {
-        // printf("Attaque possible ");
-        if (nb_bits_cp > nb_bits_cq)
-        {
-            attaque_possible = 2;
-            // printf("avec cp : %d bits \n", nb_bits_cp);
-        }
-        else if (nb_bits_cp < nb_bits_cq)
-        {
-            attaque_possible = 1;
-            // printf("avec cq : %d bits \n", nb_bits_cq);
-        }
-        else
-        {
-            attaque_possible = 1;
-            // printf("avec cp ou cq : %d bits tous les deux\n", nb_bits_cp);
-        }
+        attaque_possible = 1;
+        // printf("avec cp ou cq : %d bits tous les deux\n", nb_bits_cp);
     }
+    // }
 
     mpz_clears(ap, aq, bp, bq, sp, sq, sp_bis, sq_bis, pgcd_s, NULL);
     return attaque_possible;

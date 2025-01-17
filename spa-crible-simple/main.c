@@ -9,7 +9,7 @@
  * @param r liste des petits premiers
  * @param fichier_trace_p fichier stockant la trace de courant de p
  * @param fichier_trace_q fichier stockant la trace de courant de q
- * @param fichier_parametres fichier stockant les elements constituant la cle 
+ * @param fichier_parametres fichier stockant les elements constituant la cle
  * @param generator generateur aleatoire
  */
 void acquisition_trace_spa(unsigned int k, unsigned int N, unsigned int *r, unsigned int t, char *fichier_trace_p, char *fichier_trace_q, char *fichier_parametres, gmp_randstate_t generator)
@@ -37,19 +37,19 @@ void acquisition_trace_spa(unsigned int k, unsigned int N, unsigned int *r, unsi
  * @param r liste des petits premiers
  * @param fichier_trace_p fichier stockant la trace de courant de p
  * @param fichier_trace_q fichier stockant la trace de courant de q
- * @param fichier_parametres fichier stockant les elements constituant la cle 
+ * @param fichier_parametres fichier stockant les elements constituant la cle
  * @param generator generateur aleatoire
  */
-unsigned int exemple_attaque_spa(unsigned int k, unsigned int N, unsigned int *r,unsigned int t, char *fichier_trace_p, char *fichier_trace_q, char *fichier_parametres, gmp_randstate_t generator)
+unsigned int exemple_attaque_spa(unsigned int k, unsigned int N, unsigned int *r, unsigned int t, char *fichier_trace_p, char *fichier_trace_q, char *fichier_parametres, gmp_randstate_t generator)
 {
 
     // Acquisition de la trace pour faire l'attaque
-    acquisition_trace_spa(k, N, r,t, fichier_trace_p, fichier_trace_q, fichier_parametres, generator);
+    acquisition_trace_spa(k, N, r, t, fichier_trace_p, fichier_trace_q, fichier_parametres, generator);
 
     // Attaque spa
     unsigned int m1 = 0;
     unsigned int m2 = 0;
-    
+
     mpz_t n, p, q, s, cp, cq;
     mpz_inits(n, p, q, s, cp, cq, NULL);
     recuperer_parametres(fichier_parametres, n, p, q);
@@ -64,17 +64,19 @@ unsigned int exemple_attaque_spa(unsigned int k, unsigned int N, unsigned int *r
 
     unsigned int taille_x = 1;
     // TODO Faire une verification sans "tricher" en utilisant les valeurs de p et q (non obtenables normalement)
-    // Verification avec les vrais valeurs de p et de q 
-    if (!verification(p, s, cp)){
+    // Verification avec les vrais valeurs de p et de q
+    if (!verification(p, s, cp))
+    {
         printf("Erreur dans la valeur de cp\n");
         taille_x = 0;
     }
-    
-    if (!verification(q, s, cq)){
+
+    if (!verification(q, s, cq))
+    {
         printf("Erreur dans la valeur de cq\n");
         taille_x = 0;
     }
-    
+
     /*
     if (attaque_possible == 1 || attaque_possible == 2)
     {
@@ -86,8 +88,8 @@ unsigned int exemple_attaque_spa(unsigned int k, unsigned int N, unsigned int *r
         if (reponse == 'o' && attaque_possible == 2)
             exhaustif(cq, s, k, n);
     }*/
-    if(taille_x != 0)
-        taille_x = mpz_sizeinbase(s,2);
+    if (taille_x != 0)
+        taille_x = mpz_sizeinbase(s, 2);
 
     mpz_clears(n, p, q, s, cp, cq, NULL);
     free(liste_p);
@@ -117,22 +119,40 @@ int main(int argc, char **argv)
 
     // Variable utilisateur
     unsigned int k = atoi(argv[1]);
-    unsigned int N = atoi(argv[2]);
+    // unsigned int N = atoi(argv[2]);
     unsigned int t = atoi(argv[3]);
     char *fichier_trace_p = argv[4];
     char *fichier_trace_q = argv[5];
     char *fichier_parametres = argv[6];
-    
+
     // Variable utilitaire
     // Generation des petits premiers
-    unsigned int *r = generation_liste_nombres_premiers(N);
+    unsigned int *r ;
 
-    unsigned int nb_attaque = 1000;
-    FILE *fptr = fopen("stats","a");
-    
-    for(int i =0; i< nb_attaque;i++) 
-        fprintf(fptr,"%d\n",exemple_attaque_spa(k, N, r, t, fichier_trace_p, fichier_trace_q, fichier_parametres, generator));
-    
+    unsigned int nb_attaque = 10000;
+    FILE *fptr = fopen("stats", "w");
+    // k = 512 n = 54,60,70
+    // k = 1024 n = 100,110,120
+    unsigned listeN1[3] = {54, 60, 70};
+    unsigned listeN2[3] = {100, 110, 120};
+    for (int j = 0; j < 6; j++)
+    {
+        if (j < 3)
+        {
+            k = 512;
+            r = generation_liste_nombres_premiers(listeN1[j]);
+            for (int i = 0; i < nb_attaque; i++)
+                fprintf(fptr, "%d\n", exemple_attaque_spa(k, listeN1[j], r, t, fichier_trace_p, fichier_trace_q, fichier_parametres, generator));
+        }
+        else
+        {
+            k = 1024;
+            r = generation_liste_nombres_premiers(listeN2[j-3]);
+            for (int i = 0; i < nb_attaque; i++)
+                fprintf(fptr, "%d\n", exemple_attaque_spa(k, listeN2[j-3], r, t, fichier_trace_p, fichier_trace_q, fichier_parametres, generator));
+        }
+    }
+
     fclose(fptr);
     free(r);
     gmp_randclear(generator);

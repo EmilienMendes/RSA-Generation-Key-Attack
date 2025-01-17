@@ -22,5 +22,8 @@ compil_test_gauss : test_gauss.c gauss.c
 test_gauss : compil_test_gauss
 	./test_gauss
 
+suppression_stat : 
+	rm -f stats stats2
+
 clean :
-	rm -f main ${ptrace} ${parametres} test_gauss log stats
+	rm -f main ${ptrace} ${parametres} log 
