@@ -25,8 +25,8 @@ unsigned int exemple_attaque_cpa_horizontal(unsigned int k, unsigned int lambda,
 
     acquisition_trace_cpa(k, lambda, t, s, bruit, fichier_trace, fichier_parametre, generator);
     unsigned int succes_attaque = attaque_cpa(lambda, s, fichier_trace, fichier_parametre);
-    unsigned int succes_attaque2 = attaque_cpa2(lambda, s, fichier_trace, fichier_parametre);
-    return succes_attaque2;
+    // unsigned int succes_attaque2 = attaque_cpa2(lambda, s, fichier_trace, fichier_parametre);
+    return succes_attaque;
 }
 
 int main(int argc, char **argv)
@@ -59,20 +59,20 @@ int main(int argc, char **argv)
     unsigned int nb_attaque_reussi;
     unsigned int nb_attaque = 1000;
 
-    // FILE *fptr = fopen("stats", "a");
-    for (float bruit = 0; bruit <= 0; bruit += 1)
+    FILE *fptr = fopen("stats", "a");
+    for (float bruit = 0; bruit <= 3; bruit += 0.1)
     {
         nb_attaque_reussi = 0;
         for (unsigned int i = 0; i < nb_attaque; i++)
         {
-            if (!(i % 100))
-                printf("Attaque %d \n", i);
-            if(exemple_attaque_cpa_horizontal(k, lambda, t, s, bruit, fichier_trace, fichier_cle, generator)> 256)
+            // if (!(i % 100))
+            //     printf("Attaque %d \n", i);
+            if(exemple_attaque_cpa_horizontal(k, lambda, t, s, bruit, fichier_trace, fichier_cle, generator)> 0)
                 nb_attaque_reussi++;
         }
         float pourcentage_reussite = ((float)nb_attaque_reussi / (float)nb_attaque) * 100.0f;
         printf("Succes de l'attaque avec un bruit de %.1f : %.1f %% \n", bruit, pourcentage_reussite);
-        // fprintf(fptr, "%.1f %.1f \n", bruit, pourcentage_reussite);
+        fprintf(fptr, "%.1f %.1f \n", bruit, pourcentage_reussite);
     }
     // fclose(fptr);
     // if (nb_attaque_reussi)
