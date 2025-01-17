@@ -312,10 +312,10 @@ unsigned int attaque_spa(Liste_Diviseur *pliste, Liste_Diviseur *qliste, unsigne
     mpz_mul(bp, bp, n);
     mpz_mod(bp, bp, sq);
 
-    gmp_printf("ap (%d bits) = %Zd  \n", mpz_sizeinbase(ap, 2), ap);
-    gmp_printf("aq (%d bits) = %Zd  \n", mpz_sizeinbase(aq, 2), aq);
-    gmp_printf("bp (%d bits) = %Zd  \n", mpz_sizeinbase(bp, 2), bp);
-    gmp_printf("bq (%d bits) = %Zd  \n", mpz_sizeinbase(bq, 2), bq);
+    // gmp_printf("ap (%d bits) = %Zd  \n", mpz_sizeinbase(ap, 2), ap);
+    // gmp_printf("aq (%d bits) = %Zd  \n", mpz_sizeinbase(aq, 2), aq);
+    // gmp_printf("bp (%d bits) = %Zd  \n", mpz_sizeinbase(bp, 2), bp);
+    // gmp_printf("bq (%d bits) = %Zd  \n", mpz_sizeinbase(bq, 2), bq);
 
     /*
     On va appliquer le theoreme des restes chinois sur (ap,bp) et (aq,bq)
@@ -339,32 +339,33 @@ unsigned int attaque_spa(Liste_Diviseur *pliste, Liste_Diviseur *qliste, unsigne
     theoreme_reste_chinois_simplifie(cp, ap, bp, sp_bis, sq);
     theoreme_reste_chinois_simplifie(cq, aq, bq, sp_bis, sq);
 
-    gmp_printf("cp = %Zd\n", cp);
-    gmp_printf("cq = %Zd\n", cq);
+    // gmp_printf("cp = %Zd\n", cp);
+    // gmp_printf("cq = %Zd\n", cq);
 
     unsigned int nb_bits_cp = mpz_sizeinbase(cp, 2);
     unsigned int nb_bits_cq = mpz_sizeinbase(cq, 2);
 
     unsigned int attaque_possible = FALSE;
     if (nb_bits_cp < k / 2 && nb_bits_cq < k / 2)
-        printf("Pas assez de bits pour faire l'attaque \ncp : (%d bits reel < %d bits requis )\ncq : (%d bits reel < %d bits requis ) \n", nb_bits_cp, k / 2, nb_bits_cq, k / 2);
+        printf(" ");
+        // printf("Pas assez de bits pour faire l'attaque \ncp : (%d bits reel < %d bits requis )\ncq : (%d bits reel < %d bits requis ) \n", nb_bits_cp, k / 2, nb_bits_cq, k / 2);
     else
     {
-        printf("Attaque possible ");
+        // printf("Attaque possible ");
         if (nb_bits_cp > nb_bits_cq)
         {
             attaque_possible = 2;
-            printf("avec cp : %d bits \n", nb_bits_cp);
+            // printf("avec cp : %d bits \n", nb_bits_cp);
         }
         else if (nb_bits_cp < nb_bits_cq)
         {
             attaque_possible = 1;
-            printf("avec cq : %d bits \n", nb_bits_cq);
+            // printf("avec cq : %d bits \n", nb_bits_cq);
         }
         else
         {
             attaque_possible = 1;
-            printf("avec cp ou cq : %d bits tous les deux\n", nb_bits_cp);
+            // printf("avec cp ou cq : %d bits tous les deux\n", nb_bits_cp);
         }
     }
 

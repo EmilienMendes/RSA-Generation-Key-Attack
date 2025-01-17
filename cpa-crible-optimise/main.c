@@ -60,7 +60,7 @@ int main(int argc, char **argv)
     unsigned int nb_attaque = 1000;
 
     FILE *fptr = fopen("stats", "a");
-    for (float bruit = 0; bruit <= 3; bruit += 0.1)
+    for (float bruit = 0; bruit <= 3; bruit += 1)
     {
         nb_attaque_reussi = 0;
         for (unsigned int i = 0; i < nb_attaque; i++)

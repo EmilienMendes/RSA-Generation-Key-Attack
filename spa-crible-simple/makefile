@@ -2,8 +2,8 @@ all : spa
 
 fichier_gen_premier := ../generation-nombre-premier/generation_premier.c
 k := 512
-N := 100
-t := 3
+N := 54
+t := 10
 ptrace := ptrace.txt
 qtrace := qtrace.txt
 parametres := parametres.txt
@@ -16,4 +16,4 @@ spa : compilation
 	./main  ${k} ${N} ${t} ${ptrace} ${qtrace} ${parametres}
 
 clean :
-	rm -f main ${ptrace} ${qtrace} ${parametres}
+	rm -f main ${ptrace} ${qtrace} ${parametres} stats
