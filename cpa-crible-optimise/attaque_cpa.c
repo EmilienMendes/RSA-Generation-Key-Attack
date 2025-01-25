@@ -258,9 +258,6 @@ unsigned int generation_combinaison(Liste *candidat, unsigned int *s, unsigned i
     unsigned int nb_combinaison_teste = 0;
     unsigned int *potentiel_candidat = (unsigned int *)malloc(sizeof(int *) * lambda);
 
-    // if (nb_combinaisons_possible > 1)
-    //     printf("Combinaison possibles : %d\n", nb_combinaisons_possible);
-
     // Attributs pour le candidat courant
     // Tableau pour stocker les indices des elements dans chaque sous-ensemble
     int indices[lambda];
@@ -412,7 +409,7 @@ unsigned int attaque_cpa(unsigned int lambda, unsigned int *s, char *trace, char
     if (mpz_cmp_ui(nb_combinaison_possible, MAX_COMBINAISON) != 1)
         valeur_retour = generation_combinaison(candidat, s, lambda, mpz_get_ui(nb_combinaison_possible), p, public_key, private_key, prod_modulo);
     // else
-    //     gmp_printf("Trop de combinaison possible !!! ( %Zd > %d)\n",nb_combinaison_possible,MAX_COMBINAISON);
+    //     gmp_printf("Nombre de combinaison possible : %Zd \n", nb_combinaison_possible);
     mpz_clears(nb_combinaison_possible, public_key, private_key, verification, prod_modulo, p, NULL);
 
     // fprintf(fptr2, "%d %d\n", n, valeur_retour);
@@ -504,11 +501,10 @@ unsigned int attaque_cpa2(unsigned int lambda, unsigned int *s, char *trace, cha
     mpz_t p;
     mpz_init(p);
 
-    theoreme_reste_chinois(candidat_reel,s,lambda,p);
+    theoreme_reste_chinois(candidat_reel, s, lambda, p);
 
-    if(verification_cle(public_key, private_key, p, prod_modulo))
-        valeur_retour = mpz_sizeinbase(p,2);
-
+    if (verification_cle(public_key, private_key, p, prod_modulo))
+        valeur_retour = mpz_sizeinbase(p, 2);
 
     mpz_clears(public_key, private_key, verification, prod_modulo, p, NULL);
 

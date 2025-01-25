@@ -129,13 +129,13 @@ int main(int argc, char **argv)
     // Generation des petits premiers
     unsigned int *r ;
 
-    unsigned int nb_attaque = 10000;
+    unsigned int nb_attaque = 1;
     FILE *fptr = fopen("stats", "w");
     // k = 512 n = 54,60,70
     // k = 1024 n = 100,110,120
     unsigned listeN1[3] = {54, 60, 70};
     unsigned listeN2[3] = {100, 110, 120};
-    for (int j = 0; j < 6; j++)
+    for (int j = 0; j < 1; j++)
     {
         if (j < 3)
         {

@@ -60,7 +60,7 @@ int main(int argc, char **argv)
     unsigned int nb_attaque = 1000;
 
     FILE *fptr = fopen("stats", "a");
-    for (float bruit = 0; bruit <= 3; bruit += 1)
+    for (float bruit = 0; bruit <= 0; bruit += 1)
     {
         nb_attaque_reussi = 0;
         for (unsigned int i = 0; i < nb_attaque; i++)
@@ -74,11 +74,7 @@ int main(int argc, char **argv)
         printf("Succes de l'attaque avec un bruit de %.1f : %.1f %% \n", bruit, pourcentage_reussite);
         fprintf(fptr, "%.1f %.1f \n", bruit, pourcentage_reussite);
     }
-    // fclose(fptr);
-    // if (nb_attaque_reussi)
-    //     printf("Reussi\n");
-    // else
-    //     printf("Echoue\n");
+    fclose(fptr);
 
     return 0;
 }
