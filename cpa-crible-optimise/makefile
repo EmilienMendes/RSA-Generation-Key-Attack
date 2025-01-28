@@ -23,7 +23,7 @@ test_gauss : compil_test_gauss
 	./test_gauss
 
 suppression_stat : 
-	rm -f stats stats2
+	rm -f stats_probabilite stats_probabilite_2
 
 clean :
-	rm -f main ${ptrace} ${parametres} log 
+	rm -f main ${ptrace} ${parametres} 

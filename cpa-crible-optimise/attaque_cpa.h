@@ -18,7 +18,7 @@ float distingueur(Tableau m, Tableau l, unsigned int i, unsigned int nb_trace, u
 Liste argmax(float *liste, int taille_liste);
 void theoreme_reste_chinois(unsigned int *a, unsigned int *r, unsigned int lambda, mpz_t x);
 
-unsigned int attaque_cpa(unsigned int lambda, unsigned int *s,char *trace, char *parametres);
-unsigned int attaque_cpa2(unsigned int lambda, unsigned int *s,char *trace, char *parametres);
+float * attaque_cpa(unsigned int lambda, unsigned int *s, char *trace, char *parametres, FILE *fichier_stats,FILE *fichier_stats2);
+float stats_cpa(unsigned int lambda, unsigned int *s, unsigned int n, Liste *candidat, mpz_t prod_modulo, mpz_t public_key, mpz_t private_key, FILE *fichier_stats);
 
 #endif
