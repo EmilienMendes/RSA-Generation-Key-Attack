@@ -10,7 +10,6 @@ unsigned int verification_entier_nul(mpz_t *liste, unsigned int taille)
     return FALSE;
 }
 
-// TODO Verifier que l'entier est bien de k bits et l'ouverture reglementaire des fichiers
 
 /**
  * Genere un entier avec la methode du crible optimise
@@ -80,34 +79,19 @@ void generation_entier_crible_optimise(unsigned int k, unsigned int N, unsigned 
             }
         }
     }
-    /*
-    if (trace != NULL)
-    {
-        printf("\nReste reel :\n");
-        mpz_t tmp;
-        mpz_init(tmp);
-        for (int i = 0; i < N; i++)
-        {
-            mpz_mod_ui(tmp, v, s[i]);
-            gmp_printf("%Zd ", tmp);
-        }
 
-        printf("\n");
-        mpz_clear(tmp);
-    }
-    // */
     mpz_set(p, v);
     mpz_clear(v);
     free_mpz_liste(N, r);
     if (trace != NULL)
-
         fclose(fptr);
+
 }
 
 void ecriture_parametre(char *fichier, mpz_t n, mpz_t p)
 {
     FILE *fptr = fopen(fichier, "w");
-    gmp_fprintf(fptr, "n = %Zd\n", n);
     gmp_fprintf(fptr, "p = %Zd\n", p);
+    gmp_fprintf(fptr, "n = %Zd\n", n);
     fclose(fptr);
 }

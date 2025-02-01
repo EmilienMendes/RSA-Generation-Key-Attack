@@ -1,8 +1,5 @@
 #include "attaque_cpa.h"
-/**
- * Affichage du tableau
- * @param t tableau affiche
- */
+
 void afficher_tableau(Tableau v)
 {
     unsigned int longeur = v.x;
@@ -24,7 +21,7 @@ void free_liste_entier(Liste *liste, unsigned int nb_element)
 
 /**
  * Initialisation du tableau
- * @param t tableau d'entre
+ * @param t tableau selectionne
  * @param longueur nombre de ligne du tableau
  * @param largeur nombre de colonne du tableau
  */
@@ -34,10 +31,6 @@ void initialisation_tableau(Tableau t, unsigned int longeur, unsigned int largeu
         t.tab[i] = (float *)malloc(sizeof(int) * largeur);
 }
 
-/**
- * Suppression du tableau en memoire
- * @param t tableau supprime
- */
 void free_tableau(Tableau t)
 {
     for (unsigned int i = 0; i < t.x; i++)
@@ -46,6 +39,11 @@ void free_tableau(Tableau t)
 }
 
 // https://stackoverflow.com/questions/12733105/c-function-that-compteurs-lines-in-file
+
+/**
+ * @param filename nom du fichier
+ * @return nombre de lignes dans le fichier choisi
+ */
 int compteurlines(char *filename)
 {
     FILE *fp = fopen(filename, "r");
@@ -75,7 +73,6 @@ int compteurlines(char *filename)
  */
 Tableau recuperation_mesure(char *fichier, unsigned int lambda)
 {
-    // n = taille du fichier / lambda
     unsigned int n = compteurlines(fichier) / lambda;
 
     FILE *fptr = fopen(fichier, "r");
@@ -215,43 +212,30 @@ void theoreme_reste_chinois(unsigned int *a, unsigned int *r, unsigned int lambd
 
 /**
  * Verification que la cle partiel retrouve est correct
- * @param n cle publique
  * @param p cle prive
  * @param p_prime cle partiel a tester
  * @param s produit des premiers utilise dans le theoreme des restes chinois
  * @return Vrai si la cle partiel, Faux sinon
  */
-unsigned int verification_cle(mpz_t n, mpz_t p, mpz_t p_prime, mpz_t s)
+unsigned int verification_cle(mpz_t p, mpz_t p_prime, mpz_t s)
 {
-
     unsigned int cle_correct = FALSE;
-    mpz_t public_key, verification;
-    mpz_inits(public_key, verification, NULL);
-
-    // Recuperation de n mod s
-    mpz_mod(public_key, n, s);
-
-    // verif = p % s
+    mpz_t verification;
+    mpz_init(verification);
     mpz_mod(verification, p, s);
 
     // Verification que p % s = p'
     if (mpz_cmp(verification, p_prime) == 0)
-    {
-        // gmp_printf("Recuperation partiel de la cle p' = %Zd\n",p_prime);
-        // Verification que p' divise n mod s
-        if (mpz_divisible_p(public_key, p) != 0)
-            printf("Les deux methodes sont equivalentes !!\n");
         cle_correct = TRUE;
-    }
-    mpz_clears(public_key, verification, NULL);
+    
+    mpz_clear(verification);
     return cle_correct;
 }
 
-// A modifier
 /**
  * Effectue le theoreme des restes chinois avec toutes les combinaisons possibles
  */
-unsigned int generation_combinaison(Liste *candidat, unsigned int *s, unsigned int lambda, unsigned int nb_combinaisons_possible, mpz_t p, mpz_t public_key, mpz_t private_key, mpz_t prod_modulo)
+unsigned int generation_combinaison(Liste *candidat, unsigned int *s, unsigned int lambda, unsigned int nb_combinaisons_possible, mpz_t p, mpz_t private_key, mpz_t prod_modulo)
 {
     // Attribut pour la liste des candidats
     unsigned int valeur_retour = FALSE;
@@ -273,7 +257,7 @@ unsigned int generation_combinaison(Liste *candidat, unsigned int *s, unsigned i
             potentiel_candidat[j] = candidat[j].l[indices[j]];
         // Test de la combinaison courante
         theoreme_reste_chinois(potentiel_candidat, s, lambda, p);
-        valeur_retour = verification_cle(public_key, private_key, p, prod_modulo);
+        valeur_retour = verification_cle(private_key, p, prod_modulo);
         nb_combinaison_teste++;
 
         if (valeur_retour)
@@ -308,7 +292,7 @@ unsigned int generation_combinaison(Liste *candidat, unsigned int *s, unsigned i
  * @param trace fichier contenant la trace d'execution du programme
  * @return 1 si l'attaque reussi et 0 sinon
  */
-float * attaque_cpa(unsigned int lambda, unsigned int *s, char *trace, char *parametres, FILE *fichier_stats,FILE *fichier_stats2)
+int attaque_cpa(unsigned int lambda, unsigned int *s, char *trace, char *parametres)
 {
     mpz_t p;
     mpz_init(p);
@@ -326,47 +310,40 @@ float * attaque_cpa(unsigned int lambda, unsigned int *s, char *trace, char *par
     float *score = (float *)malloc(sizeof(float) * s[lambda - 1]);
     Liste *candidat = (Liste *)malloc(sizeof(Liste) * lambda);
 
+    // Fixation du reste modulo 2 a 1 (car le nombre est impair)
     unsigned int l0[1] = {1};
     candidat[0].l = l0;
     candidat[0].taille = 1;
 
+    // Algorithme decrit dans le papier
     for (unsigned int j = 1; j < lambda; j++)
     {
-        int correlation_max = FALSE;
         for (unsigned int h = 1; h < s[j]; h++)
         {
             for (unsigned int i = 0; i < n; i++)
             {
-                int nombre = h - (n - i) * 2; // Marche uniquement pour  n - i ????
+                int nombre = h - (n - i) * 2; 
                 // On prend le nombre et on le fais devenir positif s'il ne l'etait pas deja
                 while (nombre < 0)
                     nombre += s[j];
                 m.tab[i][j] = poids_hamming(nombre % s[j]);
             }
             score[h] = distingueur(m, l, j, n, lambda);
-            if (score[h] == 1.0f && !correlation_max)
-                correlation_max = TRUE;
         }
-        // if (!correlation_max)
-        //     printf("Pas de correlation de 1 pour %d\n", j);
+
         candidat[j] = argmax(score, s[j]);
     }
 
-    // Recuperation de n, p
+
+    // Recuperation de p
     FILE *fptr = fopen(parametres, "r");
-
-    mpz_t public_key, private_key;
-    mpz_inits(public_key, private_key, NULL);
-
-    gmp_fscanf(fptr, "n = %Zd\n", public_key);
-    gmp_fscanf(fptr, "p = %Zd", private_key);
-
+    mpz_t private_key;
+    mpz_init(private_key);
+    gmp_fscanf(fptr, "p = %Zd\n", private_key);
     fclose(fptr);
 
-    mpz_t verification, prod_modulo;
-    mpz_init(verification);
-
     // Calcul de s
+    mpz_t prod_modulo;
     mpz_init_set_ui(prod_modulo, 1);
 
     for (int i = 0; i < lambda; i++)
@@ -375,67 +352,49 @@ float * attaque_cpa(unsigned int lambda, unsigned int *s, char *trace, char *par
     // Comptage de toutes les combinaisons possibles
     mpz_t nb_combinaison_possible;
     mpz_init_set_ui(nb_combinaison_possible, 1);
-    // printf("Possibilite \n");
     for (unsigned int j = 0; j < lambda; j++)
     {
-        // if (candidat[j].taille == 1)
-        // printf("%d ", candidat[j].l[0]);
-
         if (candidat[j].taille > 1)
-        {
-            // printf("X%d ", j);
             mpz_mul_ui(nb_combinaison_possible, nb_combinaison_possible, candidat[j].taille);
-        }
     }
 
-    /*
-    printf("\n");
-
-    for (int i = 0; i < lambda; i++)
-    {
-        if (candidat[i].taille > 1)
-        {
-            printf("X%d : ", i);
-            for (int j = 0; j < candidat[i].taille; j++)
-                printf("%d ", candidat[i].l[j]);
-            printf("\n");
-        }
-    }
-    // */
     unsigned int valeur_retour = FALSE;
 
-
+    // On fais l'attaque si on a moins de MAX_COMBINAISON (defini dans constante.h)
     if (mpz_cmp_ui(nb_combinaison_possible, MAX_COMBINAISON) != 1)
-        valeur_retour = generation_combinaison(candidat, s, lambda, mpz_get_ui(nb_combinaison_possible), p, public_key, private_key, prod_modulo);
-    fprintf(fichier_stats, "%d %d\n", n, valeur_retour);
-    float nb_bits_recupere = stats_cpa(lambda,s,n,candidat,prod_modulo,public_key,private_key,fichier_stats2);
+        valeur_retour = generation_combinaison(candidat, s, lambda, mpz_get_ui(nb_combinaison_possible), p, private_key, prod_modulo);
+    
+    // printf("%d %d\n", n, valeur_retour);
+    stats_cpa(lambda, s, n, candidat, prod_modulo, private_key);
 
-    mpz_clears(nb_combinaison_possible, public_key, private_key, verification, prod_modulo, p, NULL);
+    mpz_clears(nb_combinaison_possible, private_key, prod_modulo, p, NULL);
 
     free_tableau(l);
     free_tableau(m);
     free_liste_entier(candidat, lambda);
     free(score);
 
-    float *retour = (float *) malloc(sizeof(float) * 2);
-    retour[0] = (float) valeur_retour;
-    retour[1] = nb_bits_recupere;
-    return retour;
+    return valeur_retour;
 }
 
-/*
-On regarde combien de bits on recupere (pas reelement une attaque)
-*/
-float stats_cpa(unsigned int lambda, unsigned int *s, unsigned int n, Liste *candidat, mpz_t prod_modulo, mpz_t public_key, mpz_t private_key, FILE *fichier_stats)
+/**
+ * @param lambda nombre de petits premiers
+ * @param s listes des petits premiers
+ * @param n nombre d'itteration pour obtenir l'entier premier
+ * @param candidat listes des restes possibles possedant la correlation maximum
+ * @param prod_modulo produit de tous les petits premiers
+ * @param private_key nombre premier genere
+ * @param fichier_stats fichier pour stocker le nombre de bits recupere lors de l'attaque
+ */
+void stats_cpa(unsigned int lambda, unsigned int *s, unsigned int n, Liste *candidat, mpz_t prod_modulo, mpz_t private_key)
 {
-
     mpz_t modulo;
     mpz_init(modulo);
 
     float nb_bits_recupere = 0;
     unsigned int est_dans_liste;
 
-    // Pour chaque reste
+    // Pour chaque sj on regarde si le reste reel est dans la liste et on ajoute le nombre de bits recupere en consequence
     for (unsigned int j = 0; j < lambda; j++)
     {
         est_dans_liste = FALSE;
@@ -445,13 +404,12 @@ float stats_cpa(unsigned int lambda, unsigned int *s, unsigned int n, Liste *can
             if (mpz_cmp_ui(modulo, candidat[j].l[i]) == 0)
                 est_dans_liste = TRUE;
         }
-        if (est_dans_liste && candidat[j].taille == 1)
-            nb_bits_recupere += log2(s[j]);
-            // nb_bits_recupere += log2(s[j]) - log2(candidat[j].taille);
+        // Si la veritable valeur du reste modulo sj est dans la liste on retrouve des informations
+        if (est_dans_liste )
+            nb_bits_recupere += log2(s[j]) - log2(candidat[j].taille);
     }
     mpz_clear(modulo);
 
-    fprintf(fichier_stats, "%d %2.f\n", n, nb_bits_recupere);
+    printf("Bits recupere : %2.f\n",nb_bits_recupere);
 
-    return nb_bits_recupere;
 }

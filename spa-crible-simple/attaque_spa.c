@@ -153,7 +153,12 @@ Liste_Diviseur *enlever_doublon(Liste_Diviseur *liste, unsigned int taille_liste
 }
 
 /**
- TODO Ajouter description
+ *
+ * @param N nombre de ptetits premiers
+ * @param fichier fichier contenant la trace
+ * @param taille_liste pointeur qui aura pour valeur la taille de la liste de diviseur
+ * @param m pointeur qui aura pour valeur le nombre d'itteration avant d'obtenir un nombre premier
+ * @return la listes des diviseurs uniques a partir du fichier de trace
  */
 Liste_Diviseur *recuperer_diviseur_unique(unsigned int N, char *fichier, unsigned int *taille_liste, unsigned int *m)
 {
@@ -274,9 +279,8 @@ unsigned int verification(mpz_t premier, mpz_t s, mpz_t x)
  * @param m2 entier qui verifie la relation q = v0 + 2 x m2
  * @param k taille en bits des entiers p et q
  * @param n entier publique de RSA tel que n = p x q
- * @return 2 (attaque par cp) 1 ( attaque par cq) 0 (pas assez de bits d'information pour attaquer)
  */
-unsigned int attaque_spa(Liste_Diviseur *pliste, Liste_Diviseur *qliste, unsigned int ptaille_liste, unsigned int qtaille_liste, mpz_t s, mpz_t cp, mpz_t cq, unsigned int m1, unsigned int m2, unsigned int k, mpz_t n)
+void attaque_spa(Liste_Diviseur *pliste, Liste_Diviseur *qliste, unsigned int ptaille_liste, unsigned int qtaille_liste, mpz_t s, mpz_t cp, mpz_t cq, unsigned int m1, unsigned int m2, unsigned int k, mpz_t n)
 {
     mpz_t sp, sq;
     /*
@@ -310,10 +314,10 @@ unsigned int attaque_spa(Liste_Diviseur *pliste, Liste_Diviseur *qliste, unsigne
     mpz_mul(bp, bp, n);
     mpz_mod(bp, bp, sq);
 
-    // gmp_printf("ap (%d bits) = %Zd  \n", mpz_sizeinbase(ap, 2), ap);
-    // gmp_printf("aq (%d bits) = %Zd  \n", mpz_sizeinbase(aq, 2), aq);
-    // gmp_printf("bp (%d bits) = %Zd  \n", mpz_sizeinbase(bp, 2), bp);
-    // gmp_printf("bq (%d bits) = %Zd  \n", mpz_sizeinbase(bq, 2), bq);
+    // gmp_printf("ap = %Zd  \n", ap);
+    // gmp_printf("aq  = %Zd \n", aq);
+    // gmp_printf("bp = %Zd  \n", bp);
+    // gmp_printf("bq = %Zd  \n", bq);
 
     /*
     On va appliquer le theoreme des restes chinois sur (ap,bp) et (aq,bq)
@@ -337,56 +341,11 @@ unsigned int attaque_spa(Liste_Diviseur *pliste, Liste_Diviseur *qliste, unsigne
     theoreme_reste_chinois_simplifie(cp, ap, bp, sp_bis, sq);
     theoreme_reste_chinois_simplifie(cq, aq, bq, sp_bis, sq);
 
-    // gmp_printf("cp = %Zd\n", cp);
-    // gmp_printf("cq = %Zd\n", cq);
-
     unsigned int nb_bits_cp = mpz_sizeinbase(cp, 2);
     unsigned int nb_bits_cq = mpz_sizeinbase(cq, 2);
 
-    unsigned int attaque_possible = FALSE;
-    // if (nb_bits_cp < k / 2 && nb_bits_cq < k / 2)
-    //     printf(" ");
-    // printf("Pas assez de bits pour faire l'attaque \ncp : (%d bits reel < %d bits requis )\ncq : (%d bits reel < %d bits requis ) \n", nb_bits_cp, k / 2, nb_bits_cq, k / 2);
-    // else
-    // {
-    // printf("Attaque possible ");
-    if (nb_bits_cp > nb_bits_cq)
-    {
-        attaque_possible = 2;
-        // printf("avec cp : %d bits \n", nb_bits_cp);
-    }
-    else if (nb_bits_cp < nb_bits_cq)
-    {
-        attaque_possible = 1;
-        // printf("avec cq : %d bits \n", nb_bits_cq);
-    }
-    else
-    {
-        attaque_possible = 1;
-        // printf("avec cp ou cq : %d bits tous les deux\n", nb_bits_cp);
-    }
-    // }
+    gmp_printf("cp (%d bits) = %Zd\n", nb_bits_cp, cp);
+    gmp_printf("cq (%d bits )= %Zd\n", nb_bits_cq, cq);
 
     mpz_clears(ap, aq, bp, bq, sp, sq, sp_bis, sq_bis, pgcd_s, NULL);
-    return attaque_possible;
-}
-
-void exhaustif(mpz_t c, mpz_t s, unsigned int k, mpz_t n)
-{
-    unsigned int ancienne_taille_c = 0;
-    unsigned int taille_c;
-    while ((taille_c = mpz_sizeinbase(c, 2)) < k)
-    {
-        if (ancienne_taille_c != taille_c)
-        {
-            ancienne_taille_c = taille_c;
-            printf("nb bits : %d \n", taille_c);
-        }
-        mpz_add(c, c, s);
-    }
-    while (!mpz_divisible_p(n, c))
-    {
-        mpz_add(c, c, s);
-    }
-    gmp_printf("p : %Zd\n", c);
 }

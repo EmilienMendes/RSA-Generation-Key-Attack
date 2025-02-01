@@ -62,55 +62,36 @@ unsigned int exemple_attaque_spa(unsigned int k, unsigned int N, unsigned int *r
 
     attaque_spa(liste_p, liste_q, taille_liste_p, taille_liste_q, s, cp, cq, m1, m2, k, n);
 
-    unsigned int taille_x = 1;
-    // TODO Faire une verification sans "tricher" en utilisant les valeurs de p et q (non obtenables normalement)
+    unsigned int taille_s = 1;
+    
     // Verification avec les vrais valeurs de p et de q
-    if (!verification(p, s, cp))
-    {
-        printf("Erreur dans la valeur de cp\n");
-        taille_x = 0;
+    if (!verification(p, s, cp) || !verification(q, s, cq)){
+        printf("Erreur dans la valeur de cp ou cq\n");
+        taille_s = 0;
     }
 
-    if (!verification(q, s, cq))
-    {
-        printf("Erreur dans la valeur de cq\n");
-        taille_x = 0;
-    }
-
-    /*
-    if (attaque_possible == 1 || attaque_possible == 2)
-    {
-        char reponse;
-        printf("Effectuer l'attaque [o/n] : ");
-        scanf(" %c", &reponse);
-        if (reponse == 'o' && attaque_possible == 1)
-            exhaustif(cp, s, k, n);
-        if (reponse == 'o' && attaque_possible == 2)
-            exhaustif(cq, s, k, n);
-    }*/
-    if (taille_x != 0)
-        taille_x = mpz_sizeinbase(s, 2);
-
+    if (taille_s != 0)
+        taille_s = mpz_sizeinbase(s, 2);
+    
     mpz_clears(n, p, q, s, cp, cq, NULL);
     free(liste_p);
     free(liste_q);
-    return taille_x;
+    return taille_s;
 }
 
 int main(int argc, char **argv)
 {
 
-    if (argc != 7)
+    if (argc != 8)
     {
-        printf("Usage : %s <k> <N> <t> <nom fichier 1> <nom fichier 2> <nom fichier 3>\n", argv[0]);
-        printf(" k : nombre de bit du nombres \nN : nombre de petits premier\nt : nombre de tours de Miller Rabin\n");
+        printf("Usage : %s <k> <N> <t> <e> <nom fichier 1> <nom fichier 2> <nom fichier 3>\n", argv[0]);
+        printf(" k : nombre de bit du nombres \nN : nombre de petits premier\nt : nombre de tours de Miller Rabin\ne: nombre d'execution du programme\n");
         printf("nom fichier 1 : fichier avec la trace de p \nnom fichier 2 : fichier avec la trace de q\nnom fichier 3 : fichier contenant les parametres n,p,q\n");
         return 1;
     }
 
-    // TODO Remettre la seed "aleatoire"
     long int seed = time(NULL);
-    // seed = 1733573807;
+    
     // Generateurs aleatoires
     srand(seed);
     gmp_randstate_t generator;
@@ -119,41 +100,20 @@ int main(int argc, char **argv)
 
     // Variable utilisateur
     unsigned int k = atoi(argv[1]);
-    // unsigned int N = atoi(argv[2]);
+    unsigned int N = atoi(argv[2]);
     unsigned int t = atoi(argv[3]);
-    char *fichier_trace_p = argv[4];
-    char *fichier_trace_q = argv[5];
-    char *fichier_parametres = argv[6];
+    unsigned int nb_attaque = atoi(argv[4]);
+    char *fichier_trace_p = argv[5];
+    char *fichier_trace_q = argv[6];
+    char *fichier_parametres = argv[7];
 
     // Variable utilitaire
     // Generation des petits premiers
-    unsigned int *r ;
+    unsigned int *r  = generation_liste_nombres_premiers(N);
+    
+    for (int i = 0; i < nb_attaque; i++)
+        printf("Attaque SPA taille de s : %d \n",exemple_attaque_spa(k,N, r, t, fichier_trace_p, fichier_trace_q, fichier_parametres, generator));
 
-    unsigned int nb_attaque = 1;
-    FILE *fptr = fopen("stats", "w");
-    // k = 512 n = 54,60,70
-    // k = 1024 n = 100,110,120
-    unsigned listeN1[3] = {54, 60, 70};
-    unsigned listeN2[3] = {100, 110, 120};
-    for (int j = 0; j < 1; j++)
-    {
-        if (j < 3)
-        {
-            k = 512;
-            r = generation_liste_nombres_premiers(listeN1[j]);
-            for (int i = 0; i < nb_attaque; i++)
-                fprintf(fptr, "%d\n", exemple_attaque_spa(k, listeN1[j], r, t, fichier_trace_p, fichier_trace_q, fichier_parametres, generator));
-        }
-        else
-        {
-            k = 1024;
-            r = generation_liste_nombres_premiers(listeN2[j-3]);
-            for (int i = 0; i < nb_attaque; i++)
-                fprintf(fptr, "%d\n", exemple_attaque_spa(k, listeN2[j-3], r, t, fichier_trace_p, fichier_trace_q, fichier_parametres, generator));
-        }
-    }
-
-    fclose(fptr);
     free(r);
     gmp_randclear(generator);
 
