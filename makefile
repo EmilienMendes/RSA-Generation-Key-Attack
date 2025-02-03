@@ -1,4 +1,4 @@
-.PHONY: spa cpa suppression_stat
+.PHONY: spa cpa
 
 all : spa cpa
 

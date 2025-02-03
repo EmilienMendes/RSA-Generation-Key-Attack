@@ -70,9 +70,14 @@ int main(int argc, char **argv)
 
     // Attaque CPA
     unsigned int nb_attaque_reussi = 0;
-    for (unsigned int i = 0; i < nb_attaque; i++)
-        nb_attaque_reussi+=exemple_attaque_cpa_horizontal(k, lambda, t, s, bruit, fichier_trace, fichier_cle, generator);
-
+    for (unsigned int i = 0; i < nb_attaque; i++){
+        if(exemple_attaque_cpa_horizontal(k, lambda, t, s, bruit, fichier_trace, fichier_cle, generator) > 0){
+            printf("Attaque reussi \n");
+            nb_attaque_reussi++;
+        }
+        else
+            printf("Attaque echoue\n");
+    }
     float pourcentage_reussite = ((float)nb_attaque_reussi / (float)nb_attaque) * 100.0f;
     printf("Succes de l'attaque avec un bruit de %d : %.1f %% \n", bruit, pourcentage_reussite);
 
